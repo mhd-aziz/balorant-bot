@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "build": "tsc",
+    "start": "node server.js",
+    "build": "node --check index.js && node --check deploy-commands.js && find src -name '*.js' -exec node --check {} + && echo 'Build OK'",
     "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.110.8",
     "discord.js": "^14.27.0",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "vercel": "^56.5.0"
   },
   "devDependencies": {

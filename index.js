@@ -64,10 +64,12 @@ async function startBot() {
     }
 }
 
-// Start the bot
-startBot().catch((error) => {
-    Logger.error('❌ Unhandled error in bot startup:', error);
-    process.exit(1);
-});
+// Auto-start only when run directly (not imported by server.js)
+if (require.main === module) {
+    startBot().catch((error) => {
+        Logger.error('❌ Unhandled error in bot startup:', error);
+        process.exit(1);
+    });
+}
 
 module.exports = { startBot };

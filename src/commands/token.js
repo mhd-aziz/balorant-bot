@@ -3,7 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const authService = require('../services/auth-service');
+const { AuthService } = require('../services/auth-service');
 const Logger = require('../utils/logger');
 
 module.exports = {
@@ -70,17 +70,20 @@ module.exports = {
             const acctResp = await fetch(`https://api.henrikdev.xyz/valorant/v1/by-puuid/account/${puuid}`);
             const acctData = await acctResp.json();
 
-            const gameName = acctData.data?.name || 'Unknown';
-            const tagLine = acctData.data?.tag || '0000';
+            const gameName = userData.acct?.game_name || acctData.data?.name || 'Unknown';
+            const tagLine = userData.acct?.tag_line || acctData.data?.tag || '0000';
+
+            // Determine shard from affinity
+            const affinity = userData.affinity || {};
+            const shard = affinity.valorant || affinity.live || 'ap';
 
             // Save to Supabase
-            await authService.saveSession({
-                discordId,
+            await AuthService.saveSession(discordId, {
                 puuid,
                 gameName,
                 tagLine,
-                shard: 'ap',
-                region: 'ap',
+                shard,
+                region: shard,
                 accessToken,
                 entitlementToken
             });

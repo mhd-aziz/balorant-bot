@@ -1,6 +1,38 @@
 {
-  "rewrites": [
-    { "source": "/callback", "destination": "/auth-callback.html" },
-    { "source": "/token-helper", "destination": "/token-helper.html" }
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/link-account",
+      "dest": "server.js"
+    },
+    {
+      "src": "/api/auth-callback",
+      "dest": "server.js"
+    },
+    {
+      "src": "/token-helper",
+      "dest": "server.js"
+    },
+    {
+      "src": "/callback",
+      "dest": "server.js"
+    },
+    {
+      "src": "/health",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "public/$1"
+    }
   ]
 }
