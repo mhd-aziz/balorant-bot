@@ -1,78 +1,113 @@
 /**
- * /recent command
- * Fetch recent matches by queue (competitive, unrated, etc.)
- * No account-v1 needed — works with dev key
+ * /recent — Match history dari pvp.net (butuh /login)
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { RiotApiClient } = require('../api/client');
-const { Endpoints } = require('../api/endpoints');
+const { AuthService } = require('../services/auth-service');
+const { pvpGet } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
+
+const VALORANT_RED = '#FF4655';
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('recent')
-    .setDescription('Get recent VALORANT matches by queue')
-    .addStringOption(option =>
-      option
-        .setName('queue')
-        .setDescription('Match queue type')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Competitive', value: 'competitive' },
-          { name: 'Unrated', value: 'unrated' },
-          { name: 'Deathmatch', value: 'deathmatch' },
-          { name: 'Spike Rush', value: 'spikerush' },
-          { name: 'Team Deathmatch', value: 'hurm' }
-        )
-    ),
+    .setDescription('Lihat 5 match terakhir kamu (butuh /login)'),
 
   async execute(interaction) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: false });
+
+    const discordId = interaction.user.id;
+    const session = await AuthService.getSession(discordId).catch(() => null);
+
+    if (!session) {
+      return interaction.editReply({
+        embeds: [new EmbedBuilder()
+          .setColor(VALORANT_RED)
+          .setTitle('🔒 Login Diperlukan')
+          .setDescription('Gunakan `/login` dulu untuk link akun Riot kamu.\nSetelah login, `/recent` akan tampilkan 5 match terakhir.')
+          .setTimestamp()
+        ],
+      });
+    }
 
     try {
-      const queue = interaction.options.getString('queue');
-      Logger.info(`Fetching recent matches for queue: ${queue}`);
+      const { puuid, shard, access_token, entitlement_token, game_name, tag_line } = session;
+      const region = shard || 'ap';
 
-      const { url, routing } = Endpoints.match.recent(queue);
-      const matches = await RiotApiClient.get(url, routing);
+      // Ambil match history dari pvp.net
+      const historyUrl = `https://pd.${region}.a.pvp.net/match-history/v1/history/${puuid}?startIndex=0&endIndex=5`;
+      const history = await pvpGet(historyUrl, access_token, entitlement_token);
 
-      if (!matches || matches.length === 0) {
+      const matches = history?.History || [];
+
+      if (matches.length === 0) {
         return interaction.editReply({
-          content: `No recent ${queue} matches found.`,
-          ephemeral: true,
+          embeds: [new EmbedBuilder()
+            .setColor(VALORANT_RED)
+            .setTitle('📭 Tidak Ada Match')
+            .setDescription('Belum ada match history untuk akun ini.')
+            .setTimestamp()
+          ],
         });
       }
 
-      // Ambil 5 match terakhir
-      const recent = matches.slice(0, 5);
+      // Ambil detail tiap match secara parallel (max 5)
+      const matchDetails = await Promise.allSettled(
+        matches.slice(0, 5).map(m =>
+          pvpGet(`https://pd.${region}.a.pvp.net/match-details/v1/matches/${m.MatchID}`, access_token, entitlement_token)
+        )
+      );
 
       const embed = new EmbedBuilder()
-        .setColor('#FF4655')
-        .setTitle(`Recent ${queue.toUpperCase()} Matches`)
-        .setDescription(`Last ${recent.length} matches in AP region`)
+        .setColor(VALORANT_RED)
+        .setTitle(`⚔️ Recent Matches — ${game_name}#${tag_line}`)
+        .setFooter({ text: 'pvp.net • Asia Pacific' })
         .setTimestamp();
 
-      recent.forEach((match, idx) => {
-        const matchId = match.matchId || 'Unknown';
-        const startTime = match.startTimeMillis
-          ? new Date(match.startTimeMillis).toLocaleString('en-US', { timeZone: 'Asia/Singapore' })
-          : 'Unknown';
+      matchDetails.forEach((result, i) => {
+        if (result.status === 'rejected') {
+          embed.addFields({ name: `Match ${i + 1}`, value: 'Gagal load detail', inline: false });
+          return;
+        }
+
+        const detail = result.value;
+        const playerData = detail?.players?.find(p => p.subject === puuid);
+        const mapId = detail?.matchInfo?.mapId || '';
+        const mapName = mapId.split('/').pop() || 'Unknown';
+        const queue = detail?.matchInfo?.queueID || 'unknown';
+        const won = detail?.teams?.find(t => t.teamId === playerData?.teamId)?.won;
+        const kda = playerData?.stats
+          ? `${playerData.stats.kills}/${playerData.stats.deaths}/${playerData.stats.assists}`
+          : '?/?/?';
+        const agent = playerData?.characterId?.split('/').pop() || 'Unknown';
+        const score = playerData?.stats?.score || 0;
+        const result_text = won === true ? '✅ WIN' : won === false ? '❌ LOSS' : '➖ DRAW';
 
         embed.addFields({
-          name: `Match ${idx + 1}`,
-          value: `**ID:** \`${matchId.substring(0, 16)}...\`\n**Started:** ${startTime}`,
+          name: `${result_text} • ${mapName} • ${queue}`,
+          value: `Agent: \`${agent}\` | KDA: \`${kda}\` | Score: \`${score}\``,
           inline: false,
         });
       });
 
       await interaction.editReply({ embeds: [embed] });
-      Logger.info(`Displayed ${recent.length} recent ${queue} matches`);
+
     } catch (error) {
-      Logger.error(`/recent error: ${error.message}`);
+      Logger.error(`Recent command error: ${error.message}`);
+
+      const isExpired = error.statusCode === 401 || error.statusCode === 403;
       await interaction.editReply({
-        content: `❌ Failed to fetch recent matches: ${error.message}`,
-        ephemeral: true,
+        embeds: [new EmbedBuilder()
+          .setColor('#FF0000')
+          .setTitle('❌ Gagal Ambil Match History')
+          .setDescription(
+            isExpired
+              ? 'Token kamu sudah expired. Gunakan `/login` lagi untuk refresh token.'
+              : `Error: ${error.message}`
+          )
+          .setTimestamp()
+        ],
       });
     }
   },

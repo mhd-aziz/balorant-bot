@@ -14,13 +14,13 @@ module.exports = {
      * @param {import('discord.js').ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
-        const sent = await interaction.reply({
+        const { resource: sent } = await interaction.reply({
             content: 'Pinging...',
-            fetchReply: true,
-            flags: 64, // Ephemeral flag
+            withResponse: true,
+            flags: 64,
         });
 
-        const latency = sent.createdTimestamp - interaction.createdTimestamp;
+        const latency = sent.message.createdTimestamp - interaction.createdTimestamp;
         const apiLatency = Math.round(interaction.client.ws.ping);
 
         await interaction.editReply({

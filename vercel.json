@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/callback", "destination": "/auth-callback.html" },
+    { "source": "/token-helper", "destination": "/token-helper.html" }
+  ]
+}

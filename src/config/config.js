@@ -23,6 +23,12 @@ const config = {
         apiVersion: '10',
     },
 
+    // Supabase Configuration
+    supabase: {
+        url: process.env.SUPABASE_URL,
+        anonKey: process.env.SUPABASE_ANON_KEY,
+    },
+
     // Riot Games API Configuration
     riot: {
         apiKey: process.env.RIOT_API_KEY,
@@ -51,11 +57,14 @@ const config = {
 function validateConfig() {
     const { token, clientId } = config.discord;
     const { apiKey } = config.riot;
+    const { url: supabaseUrl, anonKey: supabaseKey } = config.supabase;
 
     const missing = [];
     if (!token) missing.push('DISCORD_TOKEN');
     if (!clientId) missing.push('CLIENT_ID');
     if (!apiKey) missing.push('RIOT_API_KEY');
+    if (!supabaseUrl) missing.push('SUPABASE_URL');
+    if (!supabaseKey) missing.push('SUPABASE_ANON_KEY');
 
     if (missing.length > 0) {
         throw new Error(

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valorant Login - Discord Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            color: #e4f2ff;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(30, 35, 48, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            color: #ff4655;
+            margin-top: 0;
+            font-weight: 700;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .success {
+            background: rgba(46, 204, 113, 0.15);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+        .error {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+        .loading {
+            background: rgba(52, 152, 219, 0.15);
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn {
+            background: linear-gradient(90deg, #ff4655 0%, #ff6b6b 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        footer {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: #8a9ba8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Valorant Login</h1>
+        <p>Connecting your Riot Games account to the Discord bot...</p>
+
+        <div id="statusLoading" class="status loading">
+            ⏳ Processing authentication...
+        </div>
+
+        <div id="statusSuccess" class="status success hidden">
+            ✅ <strong>Login successful!</strong><br>
+            Your Valorant account has been linked to Discord.<br>
+            You can close this window and return to Discord.
+        </div>
+
+        <div id="statusError" class="status error hidden">
+            ❌ <strong>Login failed</strong><br>
+            <span id="errorMessage"></span><br>
+            Please try again or contact support.
+        </div>
+
+        <div id="actionArea" class="hidden">
+            <p><a id="discordLink" href="#" class="btn">Return to Discord</a></p>
+        </div>
+
+        <footer>
+            This page handles authentication for the Valorant Discord bot.<br>
+            Your tokens are stored securely and never exposed to this page.
+        </footer>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = params.get('access_token');
+        const state = params.get('state'); // format: discord_id|nonce
+
+        if (!accessToken || !state) {
+            showError('Missing authentication parameters. Please restart login from Discord.');
+            return;
+        }
+
+        const [discordId, nonce] = state.split('|');
+        if (!discordId || !nonce) {
+            showError('Invalid state parameter.');
+            return;
+        }
+
+        // Show loading
+        document.getElementById('statusLoading').classList.remove('hidden');
+        
+        // Send to backend
+        fetch('/api/auth-callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ discordId, accessToken })
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Authentication failed');
+            return data;
+        })
+        .then(data => {
+            document.getElementById('statusLoading').classList.add('hidden');
+            document.getElementById('statusSuccess').classList.remove('hidden');
+            document.getElementById('actionArea').classList.remove('hidden');
+            document.getElementById('discordLink').href = `https://discord.com/channels/@me`;
+            console.log('Login successful:', data);
+        })
+        .catch(err => {
+            console.error('Auth error:', err);
+            showError(err.message);
+        });
+
+        function showError(msg) {
+            document.getElementById('statusLoading').classList.add('hidden');
+            document.getElementById('statusError').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = msg;
+            document.getElementById('actionArea').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

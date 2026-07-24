@@ -37,19 +37,19 @@ module.exports = {
             await command.execute(interaction);
 
         } catch (error) {
+            // Interaction expired or already acknowledged — stale queue from before restart, ignore silently
+            if (error.code === 10062 || error.code === 40060) return;
+
             Logger.error(`Error executing command ${commandName}:`, error);
-            
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({
-                    content: '❌ There was an error executing this command!',
-                    ephemeral: true,
-                });
-            } else {
-                await interaction.reply({
-                    content: '❌ There was an error executing this command!',
-                    ephemeral: true,
-                });
-            }
+
+            try {
+                const payload = { content: '❌ There was an error executing this command!', flags: 64 };
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp(payload);
+                } else {
+                    await interaction.reply(payload);
+                }
+            } catch (_) { /* interaction expired after error — nothing to do */ }
         }
     },
 };
