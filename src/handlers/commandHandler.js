@@ -41,21 +41,12 @@ async function registerCommands() {
 
         Logger.info('Syncing slash commands...');
         
-        // Use guild command for instant update (no 1hr cache), fallback to global
-        const guildId = process.env.GUILD_ID;
-        if (guildId) {
-            await rest.put(
-                Routes.applicationGuildCommands(clientId, guildId),
-                { body: commands }
-            );
-            Logger.success(`✅ Successfully registered ${commands.length} commands (guild: ${guildId})`);
-        } else {
-            await rest.put(
-                Routes.applicationCommands(clientId),
-                { body: commands }
-            );
-            Logger.success(`✅ Successfully registered ${commands.length} commands (global)`);
-        }
+        // Deploy Global
+        await rest.put(
+            Routes.applicationCommands(clientId),
+            { body: commands }
+        );
+        Logger.success(`✅ Successfully registered ${commands.length} commands (global)`);
 
     } catch (error) {
         Logger.error('❌ Error registering commands:', error);

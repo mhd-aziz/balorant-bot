@@ -1,6 +1,6 @@
 /**
  * Deploy slash commands to Discord
- * Hapus global commands & deploy ke guild spesifik untuk update instan
+ * Deploy GLOBAL agar bisa dipakai di semua server
  */
 
 require('dotenv').config();
@@ -11,7 +11,6 @@ const Logger = require('./src/utils/logger');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-const GUILD_ID = process.env.GUILD_ID;
 
 async function deploy() {
   if (!TOKEN || !CLIENT_ID) {
@@ -21,12 +20,7 @@ async function deploy() {
 
   const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-  // 1. Bersihkan Global Commands (hapus semua agar tidak double)
-  Logger.info('🧹 Menghapus global commands...');
-  await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
-  Logger.success('✅ Global commands berhasil dihapus');
-
-  // 2. Load semua command files
+  // 1. Load semua command files
   const commands = [];
   const commandsDir = path.join(__dirname, 'src', 'commands');
   const files = fs.readdirSync(commandsDir).filter(f => f.endsWith('.js'));
@@ -39,15 +33,9 @@ async function deploy() {
     }
   }
 
-  // 3. Deploy ke guild (update instan, tanpa 1 jam cache)
-  if (GUILD_ID) {
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
-    Logger.success(`✅ ${commands.length} commands terdaftar di guild ${GUILD_ID}`);
-  } else {
-    // Fallback: global (butuh 1 jam propagasi)
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    Logger.success(`✅ ${commands.length} commands terdaftar secara global`);
-  }
+  // 2. Deploy ke GLOBAL (muncul di semua server)
+  await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+  Logger.success(`✅ ${commands.length} commands terdaftar secara GLOBAL`);
 
   Logger.info('Commands yang aktif: ' + commands.map(c => `/${c.name}`).join(', '));
 }
