@@ -89,7 +89,6 @@ async function request(method, url, routing, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), config.riot.timeout);
   
   const headers = {
-    'X-Riot-Token': config.riot.apiKey,
     'Accept': 'application/json',
     ...options.headers,
   };
