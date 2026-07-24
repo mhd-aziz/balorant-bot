@@ -28,6 +28,35 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Debug endpoint — check env vars (remove after debugging)
+app.get('/debug/env', (req, res) => {
+  res.json({
+    supabase_url: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
+    supabase_anon_key: process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+    supabase_service_role_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING',
+    discord_token: process.env.DISCORD_TOKEN ? 'SET' : 'MISSING',
+    client_id: process.env.CLIENT_ID ? 'SET' : 'MISSING',
+    guild_id: process.env.GUILD_ID ? 'SET' : 'MISSING',
+    node_env: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 'default'
+  });
+});
+
+// Debug endpoint — test Supabase session read (remove after debugging)
+app.get('/debug/session/:discordId', async (req, res) => {
+  try {
+    const { AuthService } = require('./src/services/auth-service');
+    const session = await AuthService.getSession(req.params.discordId);
+    if (session) {
+      res.json({ found: true, game_name: session.game_name, tag_line: session.tag_line, shard: session.shard, has_access_token: !!session.access_token, has_entitlement: !!session.entitlement_token });
+    } else {
+      res.json({ found: false });
+    }
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
 // Token helper page
 app.get('/token-helper', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'token-helper.html'));
