@@ -48,7 +48,15 @@ app.get('/debug/session/:discordId', async (req, res) => {
     const { AuthService } = require('./src/services/auth-service');
     const session = await AuthService.getSession(req.params.discordId);
     if (session) {
-      res.json({ found: true, game_name: session.game_name, tag_line: session.tag_line, shard: session.shard, has_access_token: !!session.access_token, has_entitlement: !!session.entitlement_token });
+      res.json({ 
+        found: true, 
+        puuid: session.puuid || 'MISSING', 
+        game_name: session.game_name, 
+        tag_line: session.tag_line, 
+        shard: session.shard, 
+        has_access_token: !!session.access_token, 
+        has_entitlement: !!session.entitlement_token 
+      });
     } else {
       res.json({ found: false });
     }
