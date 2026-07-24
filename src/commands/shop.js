@@ -62,8 +62,8 @@ module.exports = {
       const shard = session.shard || 'ap';
       const puuid = session.puuid;
 
-      // GET Storefront
-      const shopUrl = `https://pd.${shard}.a.pvp.net/store/v2/storefront/${puuid}`;
+      // GET Storefront (v3)
+      const shopUrl = `https://pd.${shard}.a.pvp.net/store/v3/storefront/${puuid}`;
       const shopData = await pvpGet(shopUrl, session.access_token, session.entitlement_token);
 
       // Fetch skin data for names
@@ -71,7 +71,7 @@ module.exports = {
 
       // Extract daily shop offers (SkinsPanelLayout)
       const skinPanel = shopData?.SkinsPanelLayout;
-      if (!skinPanel || !skinPanel.SingleItemOffers || skinPanel.SingleItemOffers.length === 0) {
+      if (!skinPanel || !skinPanel.SingleItemStoreOffers || skinPanel.SingleItemStoreOffers.length === 0) {
         return interaction.editReply({
           embeds: [errorEmbed(
             'Shop Kosong',
@@ -80,7 +80,7 @@ module.exports = {
         });
       }
 
-      const offers = skinPanel.SingleItemOffers;
+      const offers = skinPanel.SingleItemStoreOffers;
       const remainingSeconds = skinPanel.SingleItemOffersRemainingDurationInSeconds || 0;
       const hours = Math.floor(remainingSeconds / 3600);
       const minutes = Math.floor((remainingSeconds % 3600) / 60);
@@ -95,7 +95,7 @@ module.exports = {
 
       // Add skin offers as fields with names
       offers.forEach((offer, index) => {
-        const skinId = offer.OfferID;
+        const skinId = offer.Rewards?.[0]?.ItemID || offer.OfferID;
         const cost = offer.Cost ? Object.values(offer.Cost)[0] : 'Unknown';
         const skin = findSkinByUuid(skinData, skinId);
         const skinName = skin?.displayName || 'Unknown Skin';
