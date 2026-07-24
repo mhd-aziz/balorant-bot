@@ -1,140 +1,122 @@
-/**
- * /match — Lihat match history pemain (butuh login)
- * Menggunakan pvp.net internal API
- */
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
 const { pvpGet } = require('../services/pvp-client');
-const Logger = require('../utils/logger');
-
-const VALORANT_RED = '#FF4655';
-
-// Queue IDs
-const QUEUE_NAMES = {
-  'competitive': 'Competitive',
-  'unrated': 'Unrated',
-  'spikerush': 'Spike Rush',
-  'deathmatch': 'Deathmatch',
-  'ggteam': 'Escalation',
-  'onefa': 'Replication',
-  'newmap': 'New Map',
-  'custom': 'Custom',
-};
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('match')
-    .setDescription('Lihat match history kamu (butuh /login dulu)')
-    .addIntegerOption(opt =>
-      opt.setName('count')
-        .setDescription('Jumlah match yang ditampilkan (default: 5, max: 10)')
-        .setRequired(false)
-        .setMinValue(1)
-        .setMaxValue(10)
-    ),
+    .setDescription('Tampilkan riwayat match terakhir kamu'),
 
   async execute(interaction) {
-    await interaction.deferReply({ flags: 0 });
-
-    const discordId = interaction.user.id;
-    const count = interaction.options.getInteger('count') || 5;
-
-    // Cek session user
-    const session = await AuthService.getSession(discordId).catch(() => null);
-
-    if (!session) {
-      return interaction.editReply({
-        embeds: [errorEmbed(
-          'Belum Login',
-          'Gunakan `/login` untuk link akun Riot kamu dulu.\\nSetelah login, kamu bisa lihat match history kamu.'
-        )],
-      });
-    }
+    await interaction.deferReply({ flags: 64 });
 
     try {
-      const shard = session.shard || 'ap';
-      const puuid = session.puuid;
-
-      // Fetch match history dari pvp.net
-      const matchHistoryUrl = `https://pd.${shard}.a.pvp.net/match-history/v1/history/${puuid}?startIndex=0&endIndex=${count}`;
-      
-      Logger.info(`Fetching match history for ${session.game_name}#${session.tag_line}`);
-      const matchHistory = await pvpGet(matchHistoryUrl, session.access_token, session.entitlement_token);
-
-      if (!matchHistory || !matchHistory.History || matchHistory.History.length === 0) {
+      // 1. Ambil session user
+      const session = await AuthService.getSession(interaction.user.id);
+      if (!session) {
         return interaction.editReply({
-          embeds: [errorEmbed('Tidak Ada Match', 'Tidak ada match history yang ditemukan.')],
+          content: '❌ Kamu belum login! Gunakan `/login` terlebih dahulu.',
+          flags: 64,
         });
       }
 
+      const { puuid, shard, access_token, entitlement_token } = session;
+
+      // 2. Ambil match history dari valdocs endpoint
+      const historyUrl = `https://pd.${shard}.a.pvp.net/match-history/v1/history/${puuid}`;
+      const history = await pvpGet(historyUrl, access_token, entitlement_token);
+
+      if (!history || !history.History || history.History.length === 0) {
+        return interaction.editReply({
+          content: '📭 Tidak ada riwayat match ditemukan.',
+          flags: 64,
+        });
+      }
+
+      // 3. Ambil 5 match terakhir
+      const recentMatches = history.History.slice(0, 5);
+
+      // 4. Fetch detail setiap match
+      const matchDetails = await Promise.all(
+        recentMatches.map(async (m) => {
+          try {
+            const detailUrl = `https://pd.${shard}.a.pvp.net/match-details/v1/matches/${m.MatchID}`;
+            const detail = await pvpGet(detailUrl, access_token, entitlement_token);
+            return detail;
+          } catch (err) {
+            console.error('Failed to fetch match detail:', m.MatchID, err.message);
+            return null;
+          }
+        })
+      );
+
+      // 5. Build embed
       const embed = new EmbedBuilder()
-        .setColor(VALORANT_RED)
-        .setTitle(`Match History: ${session.game_name}#${session.tag_line}`)
-        .setDescription(`Menampilkan **${matchHistory.History.length}** match terakhir`)
-        .setFooter({ text: 'Balorant Bot • pvp.net API' })
+        .setColor('#FF4655')
+        .setTitle('📊 Riwayat Match Terakhir')
+        .setDescription(`Menampilkan 5 match terakhir untuk **${session.game_name}#${session.tag_line}**`)
         .setTimestamp();
 
-      // Parse setiap match
-      for (let i = 0; i < Math.min(matchHistory.History.length, count); i++) {
-        const match = matchHistory.History[i];
-        const matchId = match.MatchID;
-        const gameStart = new Date(match.GameStartTime);
-        const queueId = match.QueueID || 'unknown';
-        const queueName = QUEUE_NAMES[queueId] || queueId;
+      matchDetails.forEach((match, idx) => {
+        if (!match || !match.matchInfo) {
+          embed.addFields({
+            name: `Match ${idx + 1}`,
+            value: '⚠️ Data tidak tersedia',
+            inline: false,
+          });
+          return;
+        }
 
-        // Format timestamp
-        const timeAgo = getTimeAgo(gameStart);
+        const { matchInfo, players, teams } = match;
+        const player = players.find((p) => p.subject === puuid);
+
+        if (!player) {
+          embed.addFields({
+            name: `Match ${idx + 1}`,
+            value: '⚠️ Player tidak ditemukan',
+            inline: false,
+          });
+          return;
+        }
+
+        const stats = player.stats;
+        const teamId = player.teamId;
+        const team = teams.find((t) => t.teamId === teamId);
+        const won = team && team.won;
+
+        const kda = `${stats.kills}/${stats.deaths}/${stats.assists}`;
+        const resultEmoji = won ? '✅ WIN' : '❌ LOSE';
+        const mode = matchInfo.queueID || 'Unknown';
+        const mapId = matchInfo.mapId ? matchInfo.mapId.split('/').pop() : 'Unknown';
+
+        // Team scores
+        const redTeam = teams.find((t) => t.teamId === 'Red');
+        const blueTeam = teams.find((t) => t.teamId === 'Blue');
+        const score = redTeam && blueTeam 
+          ? `${redTeam.roundsWon} - ${blueTeam.roundsWon}` 
+          : 'N/A';
 
         embed.addFields({
-          name: `${i + 1}. ${queueName}`,
-          value: `🆔 \`${matchId.slice(0, 16)}...\`\\n🕒 ${timeAgo}`,
+          name: `Match ${idx + 1} — ${resultEmoji}`,
+          value: 
+            `**Map:** ${mapId}\n` +
+            `**Mode:** ${mode}\n` +
+            `**KDA:** ${kda}\n` +
+            `**Score:** ${score}\n` +
+            `**Match ID:** \`${matchInfo.matchId}\``,
           inline: false,
         });
-      }
+      });
 
-      await interaction.editReply({ embeds: [embed] });
-      Logger.info(`Displayed ${matchHistory.History.length} matches for ${discordId}`);
+      embed.setFooter({ text: 'Gunakan /matchreplay <match_id> untuk detail replay' });
 
+      await interaction.editReply({ embeds: [embed], flags: 64 });
     } catch (error) {
-      Logger.error(`Match command error: ${error.message}`);
-      
-      // Check if token expired
-      if (error.message.includes('403') || error.message.includes('401')) {
-        return interaction.editReply({
-          embeds: [errorEmbed(
-            'Token Expired',
-            'Session token kamu sudah expired. Silakan `/logout` dan `/login` lagi.'
-          )],
-        });
-      }
-
+      console.error('Error /match:', error);
       await interaction.editReply({
-        embeds: [errorEmbed(
-          'Gagal mengambil data',
-          `Error: ${error.message}`
-        )],
+        content: `❌ Gagal mengambil data match: ${error.message}`,
+        flags: 64,
       });
     }
   },
 };
-
-function errorEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor('#FF0000')
-    .setTitle(`❌ ${title}`)
-    .setDescription(description)
-    .setTimestamp();
-}
-
-function getTimeAgo(date) {
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 60) return `${diffMins} menit lalu`;
-  if (diffHours < 24) return `${diffHours} jam lalu`;
-  return `${diffDays} hari lalu`;
-}
