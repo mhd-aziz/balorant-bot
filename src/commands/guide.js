@@ -27,8 +27,7 @@ module.exports = {
           value:
             '`/shop` — Cek daily shop Valorant (skin harian)\n' +
             '`/profile` — Info rank & statistik akun\n' +
-            '`/match` — Riwayat 5 match terakhir kamu\n' +
-            '`/matchreplay <match_id>` — Download file replay match (.vrf / summary)',
+            '`/match` — Riwayat 5 match terakhir kamu',
           inline: false,
         },
         {

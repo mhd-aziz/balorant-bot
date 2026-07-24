@@ -1,5 +1,6 @@
 /**
- * /profile — Lihat profil pemain + MMR kalau user sudah /login
+ * /profile — Lihat profil pemain (Account Level, XP, Rank/MMR)
+ * Menggunakan valdocs REST API (Account XP & MMR)
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
@@ -26,10 +27,11 @@ const TIER_NAMES = {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('Lihat profil pemain VALORANT + MMR (login dulu pakai /login)')
-    .addStringOption(opt =>
-      opt.setName('riotid')
-        .setDescription('Riot ID pemain (contoh: avv#avvv). Kosongkan untuk lihat profil sendiri.')
+    .setDescription('Lihat profil pemain VALORANT (Level, XP, Rank)')
+    .addStringOption((opt) =>
+      opt
+        .setName('riotid')
+        .setDescription('Riot ID pemain (contoh: Nama#TAG). Kosongkan untuk akun sendiri.')
         .setRequired(false)
     ),
 
@@ -42,14 +44,15 @@ module.exports = {
     // Cek session user
     const session = await AuthService.getSession(discordId).catch(() => null);
 
-    // Kalau tidak ada riotid arg, harus sudah login
     if (!riotIdArg && !session) {
       return interaction.editReply({
-        embeds: [errorEmbed(
-          'Belum Login',
-          'Gunakan `/login` untuk link akun Riot kamu dulu, atau masukkan Riot ID pemain yang ingin dicari.\n' +
-          'Contoh: `/profile riotid:Nama#TAG`'
-        )],
+        embeds: [
+          errorEmbed(
+            'Belum Login',
+            'Gunakan `/login` untuk link akun Riot kamu dulu, atau masukkan Riot ID yang ingin dicari.\n' +
+            'Contoh: `/profile riotid:Nama#TAG`'
+          ),
+        ],
       });
     }
 
@@ -57,35 +60,55 @@ module.exports = {
       let account;
 
       if (riotIdArg) {
-        // Lookup by Riot ID via official API
-        try { parseRiotId(riotIdArg); } catch {
+        try {
+          parseRiotId(riotIdArg);
+        } catch {
           return interaction.editReply({
-            embeds: [errorEmbed('Format Riot ID salah', 'Gunakan format `Nama#TAG`\nContoh: `avv#avvv`')],
+            embeds: [errorEmbed('Format Riot ID Salah', 'Gunakan format `Nama#TAG`\nContoh: `TenZ#SEN`')],
           });
         }
         account = await PlayerService.getAccountByRiotId(riotIdArg);
       } else {
-        // Pakai data dari session
-        account = { puuid: session.puuid, gameName: session.game_name, tagLine: session.tag_line };
+        account = {
+          puuid: session.puuid,
+          gameName: session.game_name,
+          tagLine: session.tag_line,
+        };
       }
 
       const embed = new EmbedBuilder()
         .setColor(VALORANT_RED)
-        .setTitle(`${account.gameName}#${account.tagLine}`)
-        .setDescription('Profil pemain VALORANT — Asia Pacific')
+        .setTitle(`👤 Profil: ${account.gameName}#${account.tagLine}`)
         .addFields(
-          { name: '🆔 PUUID', value: `\`${account.puuid.substring(0, 16)}...\``, inline: false },
-          { name: '🎮 Game Name', value: account.gameName, inline: true },
-          { name: '🏷️ Tag', value: `#${account.tagLine}`, inline: true },
+          { name: '🎮 Riot ID', value: `\`${account.gameName}#${account.tagLine}\``, inline: true },
+          { name: '🆔 PUUID', value: `\`${account.puuid.slice(0, 16)}...\``, inline: true }
         )
-        .setFooter({ text: 'Riot Games API • ASIA' })
+        .setFooter({ text: 'Balorant Bot • valdocs.prometheuz.me' })
         .setTimestamp();
 
-      // Coba ambil MMR — hanya kalau user sudah login dan PUUID match session mereka,
-      // atau kalau session ada (pakai session punya user ini untuk query siapapun)
+      // Jika user sudah login, fetch Account XP & MMR
       if (session) {
+        const shard = session.shard || 'ap';
+
+        // 1. Fetch Account XP (Level & XP)
         try {
-          const shard = session.shard || 'ap';
+          const xpUrl = `https://pd.${shard}.a.pvp.net/account-xp/v1/players/${account.puuid}`;
+          const xpData = await pvpGet(xpUrl, session.access_token, session.entitlement_token);
+
+          if (xpData && xpData.Progress) {
+            const level = xpData.Progress.Level || 0;
+            const xp = xpData.Progress.XP || 0;
+            embed.addFields(
+              { name: '⭐ Account Level', value: `Level **${level}**`, inline: true },
+              { name: '✨ XP', value: `${xp.toLocaleString()} XP`, inline: true }
+            );
+          }
+        } catch (xpErr) {
+          Logger.warn(`Account XP fetch failed for ${account.puuid}: ${xpErr.message}`);
+        }
+
+        // 2. Fetch Competitive Rank / MMR
+        try {
           const mmrUrl = `https://pd.${shard}.a.pvp.net/mmr/v1/players/${account.puuid}`;
           const mmr = await pvpGet(mmrUrl, session.access_token, session.entitlement_token);
 
@@ -94,9 +117,8 @@ module.exports = {
           let rp = 0;
 
           if (latestSeason) {
-            // Ambil season terbaru
             const seasons = Object.values(latestSeason);
-            const latest = seasons.sort((a, b) => b.SeasonID - a.SeasonID)[0];
+            const latest = seasons.sort((a, b) => (b.SeasonID || '').localeCompare(a.SeasonID || ''))[0];
             if (latest) {
               const tier = latest.CompetitiveTier || 0;
               rankText = TIER_NAMES[tier] || `Tier ${tier}`;
@@ -106,28 +128,32 @@ module.exports = {
 
           embed.addFields(
             { name: '🏆 Rank', value: rankText, inline: true },
-            { name: '📊 RR', value: `${rp} RR`, inline: true },
+            { name: '📊 RR', value: `${rp} RR`, inline: true }
           );
-        } catch (mmrError) {
-          Logger.warn(`MMR fetch failed: ${mmrError.message}`);
-          embed.addFields({ name: '🏆 Rank', value: 'Tidak tersedia (token mungkin expired)', inline: false });
+        } catch (mmrErr) {
+          Logger.warn(`MMR fetch failed for ${account.puuid}: ${mmrErr.message}`);
         }
       } else {
-        embed.addFields({ name: '💡 MMR', value: 'Gunakan `/login` untuk lihat rank', inline: false });
+        embed.addFields({
+          name: '💡 Level & Rank',
+          value: 'Gunakan `/login` untuk melihat Level & Rank lengkap.',
+          inline: false,
+        });
       }
 
       await interaction.editReply({ embeds: [embed] });
-
     } catch (error) {
-      Logger.error(`Profile command error: ${error.message}`);
-      const isNotFound = error.statusCode === 404;
+      Logger.error(`Profile error: ${error.message}`);
+      const is404 = error.statusCode === 404;
       await interaction.editReply({
-        embeds: [errorEmbed(
-          isNotFound ? 'Pemain tidak ditemukan' : 'Gagal mengambil data',
-          isNotFound
-            ? `Riot ID tidak ditemukan di region Asia Pacific`
-            : `Error: ${error.message}`
-        )],
+        embeds: [
+          errorEmbed(
+            is404 ? 'Pemain Tidak Ditemukan' : 'Gagal Mengambil Data',
+            is404
+              ? 'Riot ID tidak ditemukan. Pastikan nama dan tag sudah benar.'
+              : `Error: ${error.message}`
+          ),
+        ],
       });
     }
   },

@@ -108,7 +108,7 @@ module.exports = {
         });
       });
 
-      embed.setFooter({ text: 'Gunakan /matchreplay <match_id> untuk detail replay' });
+      embed.setFooter({ text: 'Balorant Bot • valdocs API' });
 
       await interaction.editReply({ embeds: [embed], flags: 64 });
     } catch (error) {
