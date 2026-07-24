@@ -23,10 +23,11 @@ app.use(express.static('public'));
 app.post('/api/link-account', linkAccountHandler);
 app.post('/api/auth-callback', authCallbackHandler);
 app.post('/api/riot-login', require('./api/riot-login'));
+app.post('/api/link-account-v2', require('./api/link-account-v2'));
 
 // Pages
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login-v2.html'));
 });
 
 app.get('/success', (req, res) => {

