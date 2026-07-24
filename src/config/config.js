@@ -31,7 +31,6 @@ const config = {
 
     // Riot Games API Configuration
     riot: {
-        apiKey: process.env.RIOT_API_KEY,
         defaultPlatform: 'ap', // Asia Pacific - hardcoded untuk region Pacific
         // Rate limits per routing value (platform routing: ap, eu, na, etc.)
         rateLimits: {
@@ -56,13 +55,11 @@ const config = {
  */
 function validateConfig() {
     const { token, clientId } = config.discord;
-    const { apiKey } = config.riot;
     const { url: supabaseUrl, anonKey: supabaseKey } = config.supabase;
 
     const missing = [];
     if (!token) missing.push('DISCORD_TOKEN');
     if (!clientId) missing.push('CLIENT_ID');
-    if (!apiKey) missing.push('RIOT_API_KEY');
     if (!supabaseUrl) missing.push('SUPABASE_URL');
     if (!supabaseKey) missing.push('SUPABASE_ANON_KEY');
 
