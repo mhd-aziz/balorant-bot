@@ -44,7 +44,7 @@ module.exports = {
     .setDescription('Lihat daily shop kamu (4 skin offers hari ini)'),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
     const discordId = interaction.user.id;
     const session = await AuthService.getSession(discordId).catch(() => null);
