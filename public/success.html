@@ -31,11 +31,32 @@
     h1 { color: #66fcf1; font-size: 28px; margin-bottom: 12px; }
     p { color: #ece8e1; opacity: 0.8; font-size: 16px; line-height: 1.5; margin-bottom: 24px; }
     .hint {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 200, 87, 0.1);
+      border: 1px solid rgba(255, 200, 87, 0.3);
       border-radius: 8px;
       padding: 16px;
       font-size: 14px;
       color: #ffc857;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: #5865F2;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+    .btn:hover {
+      background: #4752C4;
+      transform: translateY(-2px);
     }
   </style>
 </head>
@@ -47,6 +68,16 @@
     <div class="hint">
       💡 Kamu sekarang bisa kembali ke Discord dan mencoba command <strong>/shop</strong> atau <strong>/profile</strong>!
     </div>
+    <a href="discord://" class="btn" onclick="openDiscord()">💬 Buka Discord</a>
   </div>
+  <script>
+    function openDiscord() {
+      // Try deep link first (opens desktop/mobile app), fallback to web
+      setTimeout(() => { window.location.href = 'https://discord.com/channels/@me'; }, 1500);
+    }
+    // Auto-redirect after 3 seconds
+    setTimeout(() => { window.location.href = 'discord://'; }, 3000);
+    setTimeout(() => { window.location.href = 'https://discord.com/channels/@me'; }, 4500);
+  </script>
 </body>
 </html>
