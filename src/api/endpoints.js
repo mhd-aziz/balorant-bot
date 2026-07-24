@@ -1,23 +1,25 @@
 /**
  * Riot Games API Endpoint Definitions
- * Base URL: https://ap.api.riotgames.com (Asia Pacific)
+ * VALORANT endpoints: https://ap.api.riotgames.com (AP region)
+ * Account endpoints: https://asia.api.riotgames.com (ASIA region)
  */
 
-const BASE = 'https://ap.api.riotgames.com';
+const BASE_VAL = 'https://ap.api.riotgames.com';
+const BASE_ACCOUNT = 'https://asia.api.riotgames.com';
 
 const Endpoints = {
-  // account-v1
+  // account-v1 — uses ASIA routing
   account: {
     byRiotId(gameName, tagLine) {
       return {
-        url: `${BASE}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-        routing: 'ap',
+        url: `${BASE_ACCOUNT}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
+        routing: 'asia',
       };
     },
     byPuuid(puuid) {
       return {
-        url: `${BASE}/riot/account/v1/accounts/by-puuid/${puuid}`,
-        routing: 'ap',
+        url: `${BASE_ACCOUNT}/riot/account/v1/accounts/by-puuid/${puuid}`,
+        routing: 'asia',
       };
     },
   },
@@ -27,19 +29,19 @@ const Endpoints = {
     listByPuuid(puuid, params = {}) {
       const qs = new URLSearchParams(params).toString();
       return {
-        url: `${BASE}/val/match/v1/matchlists/by-puuid/${puuid}${qs ? '?' + qs : ''}`,
+        url: `${BASE_VAL}/val/match/v1/matchlists/by-puuid/${puuid}${qs ? '?' + qs : ''}`,
         routing: 'ap',
       };
     },
     byMatchId(matchId) {
       return {
-        url: `${BASE}/val/match/v1/matches/${matchId}`,
+        url: `${BASE_VAL}/val/match/v1/matches/${matchId}`,
         routing: 'ap',
       };
     },
     recent(queue) {
       return {
-        url: `${BASE}/val/match/v1/recent-matches/by-queue/${queue}`,
+        url: `${BASE_VAL}/val/match/v1/recent-matches/by-queue/${queue}`,
         routing: 'ap',
       };
     },
@@ -50,7 +52,7 @@ const Endpoints = {
     leaderboard(actId, params = {}) {
       const qs = new URLSearchParams(params).toString();
       return {
-        url: `${BASE}/val/ranked/v1/leaderboards/by-act/${actId}${qs ? '?' + qs : ''}`,
+        url: `${BASE_VAL}/val/ranked/v1/leaderboards/by-act/${actId}${qs ? '?' + qs : ''}`,
         routing: 'ap',
       };
     },
@@ -61,7 +63,7 @@ const Endpoints = {
     all(locale = null) {
       const qs = locale ? `?locale=${locale}` : '';
       return {
-        url: `${BASE}/val/content/v1/contents${qs}`,
+        url: `${BASE_VAL}/val/content/v1/contents${qs}`,
         routing: 'ap',
       };
     },
@@ -71,7 +73,7 @@ const Endpoints = {
   status: {
     platform() {
       return {
-        url: `${BASE}/val/status/v1/platform-data`,
+        url: `${BASE_VAL}/val/status/v1/platform-data`,
         routing: 'ap',
       };
     },

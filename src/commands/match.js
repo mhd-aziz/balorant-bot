@@ -1,6 +1,5 @@
 /**
- * Match command — Lihat match history pemain VALORANT
- * Usage: /match riotid:TenZ#cryo count:3
+ * /match riotid:Name#TAG count:N — Lihat match history pemain VALORANT
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
@@ -14,56 +13,54 @@ module.exports = {
     .setDescription('Lihat match history pemain VALORANT')
     .addStringOption(opt =>
       opt.setName('riotid')
-        .setDescription('Riot ID pemain (contoh: TenZ#cryo)')
+        .setDescription('Riot ID pemain (contoh: avv#avvv)')
         .setRequired(true)
     )
     .addIntegerOption(opt =>
       opt.setName('count')
-        .setDescription('Jumlah match yang ditampilkan (1-5, default: 3)')
-        .setRequired(false)
+        .setDescription('Jumlah match yang ingin ditampilkan (1-10)')
         .setMinValue(1)
-        .setMaxValue(5)
+        .setMaxValue(10)
+        .setRequired(false)
     ),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: false });
 
     const riotId = interaction.options.getString('riotid');
-    const count = interaction.options.getInteger('count') || 3;
+    const count = interaction.options.getInteger('count') || 5;
 
     try {
       parseRiotId(riotId);
     } catch {
       return interaction.editReply({
-        embeds: [errorEmbed('Format Riot ID salah', 'Gunakan format `Nama#TAG`\nContoh: `TenZ#cryo`')],
+        embeds: [errorEmbed('Format Riot ID salah', 'Gunakan format `Nama#TAG`\nContoh: `avv#avvv`')],
       });
     }
 
     try {
-      const account = await PlayerService.getAccountByRiotId(riotId);
-      const matchList = await PlayerService.getMatchHistory(account.puuid, { size: count });
-      const matchIds = matchList?.history || [];
+      const matches = await PlayerService.getMatchHistory(riotId, count);
 
-      if (matchIds.length === 0) {
+      if (!matches || matches.length === 0) {
         return interaction.editReply({
-          embeds: [errorEmbed('Tidak ada match', `Pemain ${riotId} belum bermain atau match history kosong`)],
+          embeds: [errorEmbed('Tidak ada match', `Tidak ditemukan riwayat match untuk \`${riotId}\``)],
         });
       }
 
-      const matchSummary = matchIds.map((match, idx) => {
-        const time = match.gameStartTime
-          ? new Date(match.gameStartTime).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
-          : 'Unknown time';
-        return `**${idx + 1}.** \`${match.matchId}\` · ${time}`;
-      }).join('\n');
-
       const embed = new EmbedBuilder()
         .setColor(VALORANT_RED)
-        .setTitle(`🎮 Match History — ${account.gameName}#${account.tagLine}`)
-        .setDescription(`${matchIds.length} match terakhir`)
-        .addFields({ name: '📋 Match IDs', value: matchSummary, inline: false })
-        .setFooter({ text: 'Riot Games API • AP' })
+        .setTitle(`Match History — ${riotId}`)
+        .setDescription(`${matches.length} match terbaru`)
+        .setFooter({ text: 'Riot Games API • Asia Pacific' })
         .setTimestamp();
+
+      matches.slice(0, count).forEach((m, i) => {
+        embed.addFields({
+          name: `${i + 1}. Match ID: ${m.matchId.substring(0, 12)}...`,
+          value: `🕒 ${new Date(m.gameStartMillis).toLocaleString('id-ID')}\n🎮 Mode: ${m.queueId || 'Unknown'}`,
+          inline: false,
+        });
+      });
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
@@ -72,7 +69,7 @@ module.exports = {
         embeds: [errorEmbed(
           isNotFound ? 'Pemain tidak ditemukan' : 'Gagal mengambil data',
           isNotFound
-            ? `Riot ID \`${riotId}\` tidak ditemukan`
+            ? `Riot ID \`${riotId}\` tidak ditemukan di region Asia Pacific`
             : `Error: ${error.message}`
         )],
       });
