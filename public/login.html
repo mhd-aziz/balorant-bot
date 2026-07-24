@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Valorant - Balorant Bot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f1923 0%, #1a2332 100%);
+      color: #ece8e1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 70, 85, 0.2);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo h1 {
+      color: #ff4655;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .logo p {
+      color: #ece8e1;
+      opacity: 0.7;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #ece8e1;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #ece8e1;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #ff4655;
+      background: rgba(255, 255, 255, 0.12);
+    }
+    input::placeholder {
+      color: rgba(236, 232, 225, 0.4);
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #ff4655;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #e63946;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 70, 85, 0.4);
+    }
+    .btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .message {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    .message.error {
+      background: rgba(255, 70, 85, 0.2);
+      border: 1px solid #ff4655;
+      color: #ff4655;
+    }
+    .message.success {
+      background: rgba(102, 252, 241, 0.2);
+      border: 1px solid #66fcf1;
+      color: #66fcf1;
+    }
+    .message.show {
+      display: block;
+    }
+    .info-box {
+      background: rgba(255, 200, 87, 0.1);
+      border: 1px solid rgba(255, 200, 87, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #ffc857;
+    }
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top: 3px solid #ff4655;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>🎮 Balorant Bot</h1>
+      <p>Link akun Riot kamu ke Discord</p>
+    </div>
+
+    <div class="info-box">
+      🔒 <strong>Aman:</strong> Username & password langsung dikirim ke Riot Games API. Bot tidak pernah menyimpan password kamu.
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Username Riot</label>
+        <input type="text" id="username" name="username" placeholder="nama_user" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">
+        Login & Link ke Discord
+      </button>
+    </form>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const message = document.getElementById('message');
+
+    // Ambil state (discord_id) dari URL query param
+    const urlParams = new URLSearchParams(window.location.search);
+    const state = urlParams.get('state');
+
+    if (!state) {
+      showMessage('error', '❌ Link tidak valid. Gunakan /login di Discord untuk mendapatkan link yang benar.');
+      submitBtn.disabled = true;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showMessage('error', 'Username dan password harus diisi!');
+        return;
+      }
+
+      // Disable button & show loading
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Logging in...';
+      message.classList.remove('show');
+
+      try {
+        const response = await fetch('/api/riot-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            password,
+            discord_id: state
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showMessage('success', '✅ Berhasil! Akun Riot kamu sudah terlink ke Discord.');
+          form.reset();
+          setTimeout(() => {
+            window.location.href = '/success';
+          }, 2000);
+        } else {
+          showMessage('error', `❌ ${data.message || 'Login gagal. Cek username/password kamu.'}`);
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Login & Link ke Discord';
+        }
+      } catch (error) {
+        showMessage('error', '❌ Terjadi kesalahan. Coba lagi nanti.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Login & Link ke Discord';
+      }
+    });
+
+    function showMessage(type, text) {
+      message.className = `message ${type} show`;
+      message.textContent = text;
+    }
+  </script>
+</body>
+</html>
