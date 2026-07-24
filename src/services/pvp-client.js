@@ -73,4 +73,24 @@ async function pvpPut(url, body, accessToken, entitlementToken) {
   return res.json();
 }
 
-module.exports = { pvpGet, pvpPut };
+/**
+ * POST request ke pvp.net (Storefront/Shop butuh POST dengan body `{}`)
+ * @param {string} url
+ * @param {any} body
+ * @param {string} accessToken
+ * @param {string} entitlementToken
+ */
+async function pvpPost(url, body = {}, accessToken, entitlementToken) {
+  const headers = await pvpHeaders(accessToken, entitlementToken);
+  headers['Content-Type'] = 'application/json';
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const err = new Error(`HTTP ${res.status}: ${res.statusText} — ${text}`);
+    err.statusCode = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+module.exports = { pvpGet, pvpPost, pvpPut };

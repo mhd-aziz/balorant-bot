@@ -4,7 +4,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
-const { pvpGet } = require('../services/pvp-client');
+const { pvpPost } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
 
 const VALORANT_RED = '#FF4655';
@@ -62,9 +62,9 @@ module.exports = {
       const shard = session.shard || 'ap';
       const puuid = session.puuid;
 
-      // GET Storefront (v3)
+      // POST Storefront (v3)
       const shopUrl = `https://pd.${shard}.a.pvp.net/store/v3/storefront/${puuid}`;
-      const shopData = await pvpGet(shopUrl, session.access_token, session.entitlement_token);
+      const shopData = await pvpPost(shopUrl, {}, session.access_token, session.entitlement_token);
 
       // Fetch skin data for names
       const skinData = await getSkinData();
