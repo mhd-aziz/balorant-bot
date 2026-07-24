@@ -23,6 +23,20 @@ const config = {
         apiVersion: '10',
     },
 
+    // Riot Games API Configuration
+    riot: {
+        apiKey: process.env.RIOT_API_KEY,
+        defaultPlatform: 'ap', // Asia Pacific - hardcoded untuk region Pacific
+        // Rate limits per routing value (platform routing: ap, eu, na, etc.)
+        rateLimits: {
+            perSecond: 20,
+            perMinute: 100,
+        },
+        // Timeout in milliseconds
+        timeout: 10000,
+        retries: 2,
+    },
+
     // Logging Configuration
     logging: {
         enableDebug: process.env.DEBUG === 'true',
@@ -36,10 +50,16 @@ const config = {
  */
 function validateConfig() {
     const { token, clientId } = config.discord;
+    const { apiKey } = config.riot;
 
-    if (!token || !clientId) {
+    const missing = [];
+    if (!token) missing.push('DISCORD_TOKEN');
+    if (!clientId) missing.push('CLIENT_ID');
+    if (!apiKey) missing.push('RIOT_API_KEY');
+
+    if (missing.length > 0) {
         throw new Error(
-            'Missing required configuration: DISCORD_TOKEN and CLIENT_ID must be set in .env file'
+            `Missing required environment variables: ${missing.join(', ')}`
         );
     }
 
