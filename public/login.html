@@ -209,7 +209,7 @@ Contoh: https://playvalorant.com/id-id/opt_in#access_token=eyJ...&id_token=eyJ..
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const state = urlParams.get('state'); // discord_id
+    const state = urlParams.get('discord_id') || urlParams.get('state');
 
     if (!state) {
       alert('❌ Link tidak valid. Gunakan /login di Discord untuk mendapatkan link yang benar.');
