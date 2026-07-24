@@ -58,7 +58,7 @@ module.exports = {
       Logger.error(`/status error: ${error.message}`);
       await interaction.editReply({
         content: `❌ Failed to fetch status: ${error.message}`,
-        ephemeral: true,
+        flags: 64,
       });
     }
   },

@@ -15,7 +15,7 @@ module.exports = {
     .setDescription('Lihat 5 match terakhir kamu (butuh /login)'),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ flags: 0 });
 
     const discordId = interaction.user.id;
     const session = await AuthService.getSession(discordId).catch(() => null);

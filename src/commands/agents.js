@@ -24,7 +24,7 @@ module.exports = {
       if (!agents || agents.length === 0) {
         return interaction.editReply({
           content: 'No agents found.',
-          ephemeral: true,
+          flags: 64,
         });
       }
 
@@ -60,7 +60,7 @@ module.exports = {
       Logger.error(`/agents error: ${error.message}`);
       await interaction.editReply({
         content: `❌ Failed to fetch agents: ${error.message}`,
-        ephemeral: true,
+        flags: 64,
       });
     }
   },

@@ -12,7 +12,7 @@ module.exports = {
     .setDescription('Hapus link akun Riot dari bot'),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     try {
       const discordId = interaction.user.id;

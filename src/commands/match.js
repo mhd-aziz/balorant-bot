@@ -35,7 +35,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ flags: 0 });
 
     const discordId = interaction.user.id;
     const count = interaction.options.getInteger('count') || 5;

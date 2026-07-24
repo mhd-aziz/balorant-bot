@@ -24,7 +24,7 @@ module.exports = {
       if (!maps || maps.length === 0) {
         return interaction.editReply({
           content: 'No maps found.',
-          ephemeral: true,
+          flags: 64,
         });
       }
 
@@ -60,7 +60,7 @@ module.exports = {
       Logger.error(`/maps error: ${error.message}`);
       await interaction.editReply({
         content: `❌ Failed to fetch maps: ${error.message}`,
-        ephemeral: true,
+        flags: 64,
       });
     }
   },

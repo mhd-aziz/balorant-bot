@@ -29,7 +29,7 @@ module.exports = {
             if (!command) {
                 await interaction.reply({
                     content: '❌ Command not found!',
-                    ephemeral: true,
+                    flags: 64,
                 });
                 return;
             }
