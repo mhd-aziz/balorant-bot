@@ -27,7 +27,7 @@ app.post('/api/link-account-v2', require('./api/link-account-v2'));
 
 // Pages
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login-v2.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.get('/success', (req, res) => {
