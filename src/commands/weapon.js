@@ -16,6 +16,7 @@ async function getWeaponData() {
     const json = await res.json();
     if (json.status === 200 && json.data) {
       _weaponCache = json.data;
+      Logger.info(`Weapon cache loaded: ${json.data.length} weapons`);
       return _weaponCache;
     }
   } catch (err) {
@@ -72,7 +73,7 @@ module.exports = {
             ? `Ditemukan **${results.length} senjata**, menampilkan **${maxDisplay} pertama**.\nGunakan keyword lebih spesifik untuk mempersempit hasil.`
             : `Ditemukan **${results.length} senjata**`
         )
-        .setFooter({ text: 'Valorant API • valorant-api.com' })
+        .setFooter({ text: 'Balorant Bot • valorant-api.com' })
         .setTimestamp();
 
       toDisplay.forEach((weapon, index) => {
@@ -110,11 +111,11 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      Logger.error(`Weapon command error: ${error.message}`);
+      Logger.error(`Weapon command error for user ${interaction.user.id}: ${error.message}`);
       await interaction.editReply({
         embeds: [errorEmbed(
-          'Gagal mengambil data weapon',
-          `Error: ${error.message}`
+          'Gagal Mengambil Data Weapon',
+          `Terjadi kesalahan saat mengambil data weapon.\nError: ${error.message}`
         )],
       });
     }

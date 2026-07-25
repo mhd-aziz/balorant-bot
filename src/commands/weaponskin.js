@@ -16,6 +16,7 @@ async function getSkinData() {
     const json = await res.json();
     if (json.status === 200 && json.data) {
       _skinCache = json.data;
+      Logger.info(`Weapon skins cache loaded: ${json.data.length} skins`);
       return _skinCache;
     }
   } catch (err) {
@@ -86,7 +87,7 @@ module.exports = {
         .setColor(VALORANT_RED)
         .setTitle(`🎨 Skin: ${skin.displayName}`)
         .setDescription(`Ditemukan **${results.length} skin** cocok.`)
-        .setFooter({ text: 'Valorant API • valorant-api.com' })
+        .setFooter({ text: 'Balorant Bot • valorant-api.com' })
         .setTimestamp();
 
       if (imageUrl) {
@@ -134,11 +135,11 @@ module.exports = {
       });
 
     } catch (error) {
-      Logger.error(`Weaponskin command error: ${error.message}`);
+      Logger.error(`Weaponskin command error for user ${interaction.user.id}: ${error.message}`);
       await interaction.editReply({
         embeds: [errorEmbed(
-          'Gagal mengambil data skin',
-          `Error: ${error.message}`
+          'Gagal Mengambil Data Skin',
+          `Terjadi kesalahan saat mengambil data skin.\nError: ${error.message}`
         )],
       });
     }
