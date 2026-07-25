@@ -2,7 +2,7 @@
  * /weaponskin — Cari dan lihat info skin senjata Valorant (gambar + video)
  */
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder } = require('discord.js');
 const Logger = require('../utils/logger');
 
 const VALORANT_RED = '#FF4655';
@@ -29,6 +29,16 @@ function searchSkin(skins, query) {
   return skins.filter(s => 
     s.displayName.toLowerCase().includes(lowerQuery)
   );
+}
+
+// Buat select menu items dari skin list (max 25, Discord limit)
+function createSelectMenuItems(skins) {
+  return skins.slice(0, 25).map((skin, index) => ({
+    label: skin.displayName,
+    value: skin.uuid,
+    description: skin.weapon?.displayName ? `Weapon: ${skin.weapon.displayName}` : undefined,
+    emoji: index < 9 ? { name: (index + 1).toString() } : undefined,
+  }));
 }
 
 module.exports = {
@@ -77,7 +87,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor(VALORANT_RED)
         .setTitle(`🎨 Skin: ${skin.displayName}`)
-        .setDescription(`Ditemukan **${results.length} skin** cocok. Menampilkan skin paling relevan: **${skin.displayName}**`)
+        .setDescription(`Ditemukan **${results.length} skin** cocok.`)
         .setFooter({ text: 'Valorant API • valorant-api.com' })
         .setTimestamp();
 
@@ -106,17 +116,24 @@ module.exports = {
         inline: false,
       });
 
-      // Jika ada lebih dari 1 hasil pencarian, tunjukkan opsi lainnya
+      // Sembunyikan "Skin Lain Yang Cocok" dari embed — pindah ke select menu
+
+      // Buat select menu untuk skin lain (opsional, hanya jika ada >1 hasil)
+      let components = [];
       if (results.length > 1) {
-        const otherResults = results.slice(1, 6).map(s => s.displayName).join(', ');
-        embed.addFields({
-          name: '🔍 Skin Lain Yang Cocok:',
-          value: otherResults + (results.length > 6 ? ` (+${results.length - 6} lainnya)` : ''),
-          inline: false,
-        });
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId(`weaponskin_select_${interaction.user.id}`)
+          .setPlaceholder('🎨 Pilih skin lain...')
+          .addOptions(createSelectMenuItems(results));
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+        components.push(row);
       }
 
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ 
+        embeds: [embed], 
+        components 
+      });
 
     } catch (error) {
       Logger.error(`Weaponskin command error: ${error.message}`);
