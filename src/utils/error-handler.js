@@ -94,13 +94,19 @@ function apiError(message, statusCode = null) {
 }
 
 /**
- * Check if error is auth-related (401/403)
+ * Check if error is auth-related (401/403/BAD_CLAIMS)
  * @param {Error} error
  * @returns {boolean}
  */
 function isAuthError(error) {
   const message = error?.message || '';
-  return message.includes('401') || message.includes('403') || message.includes('Unauthorized');
+  return (
+    message.includes('401') ||
+    message.includes('403') ||
+    message.includes('Unauthorized') ||
+    message.includes('BAD_CLAIMS') ||
+    message.includes('validating/decoding RSO')
+  );
 }
 
 /**
