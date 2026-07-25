@@ -1,5 +1,5 @@
 /**
- * /shop — Lihat daily shop (4 skin offers) user
+ * /shop — Lihat daily shop (4 skin offers) user dengan media (video/gambar)
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
@@ -29,7 +29,6 @@ async function getSkinData() {
 function findSkinByUuid(skins, uuid) {
   for (const skin of skins) {
     if (skin.uuid === uuid) return skin;
-    // Check levels
     if (skin.levels) {
       const level = skin.levels.find(l => l.uuid === uuid);
       if (level) return skin;
@@ -38,10 +37,29 @@ function findSkinByUuid(skins, uuid) {
   return null;
 }
 
+// Ambil media (video link atau image url) dari object skin
+function getSkinMedia(skin) {
+  if (!skin) return { videoUrl: null, imageUrl: null };
+
+  // 1. Cari video link dari levels
+  let videoUrl = null;
+  if (skin.levels) {
+    const levelWithVideo = skin.levels.find(l => l.streamedVideo);
+    if (levelWithVideo) {
+      videoUrl = levelWithVideo.streamedVideo;
+    }
+  }
+
+  // 2. Gambar (displayIcon atau chroma fullRender)
+  const imageUrl = skin.displayIcon || skin.chromas?.[0]?.fullRender || skin.chromas?.[0]?.displayIcon || null;
+
+  return { videoUrl, imageUrl };
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('shop')
-    .setDescription('Lihat daily shop kamu (4 skin offers hari ini)'),
+    .setDescription('Lihat daily shop kamu (4 skin offers hari ini dengan preview)'),
 
   async execute(interaction) {
     await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
@@ -62,11 +80,11 @@ module.exports = {
       const shard = session.shard || 'ap';
       const puuid = session.puuid;
 
-      // POST Storefront (v3)
+      // POST Storefront (v3) ke Riot Games API
       const shopUrl = `https://pd.${shard}.a.pvp.net/store/v3/storefront/${puuid}`;
       const shopData = await pvpPost(shopUrl, {}, session.access_token, session.entitlement_token);
 
-      // Fetch skin data for names
+      // Fetch skin data dari valorant-api.com
       const skinData = await getSkinData();
 
       // Extract daily shop offers (SkinsPanelLayout)
@@ -85,26 +103,46 @@ module.exports = {
       const hours = Math.floor(remainingSeconds / 3600);
       const minutes = Math.floor((remainingSeconds % 3600) / 60);
 
-      // Build embed
       const embed = new EmbedBuilder()
         .setColor(VALORANT_RED)
         .setTitle(`🛒 Daily Shop — ${session.game_name}#${session.tag_line}`)
-        .setDescription(`**${offers.length} skin** tersedia hari ini\n⏰ Reset dalam **${hours}h ${minutes}m**`)
-        .setFooter({ text: 'Valorant Shop API' })
+        .setDescription(`**${offers.length} skin offers hari ini** • Reset dalam **${hours}h ${minutes}m**`)
+        .setFooter({ text: 'Valorant Storefront API' })
         .setTimestamp();
 
-      // Add skin offers as fields with names
+      let firstSkinImage = null;
+
+      // Add skin offers as fields
       offers.forEach((offer, index) => {
         const skinId = offer.Rewards?.[0]?.ItemID || offer.OfferID;
         const cost = offer.Cost ? Object.values(offer.Cost)[0] : 'Unknown';
         const skin = findSkinByUuid(skinData, skinId);
         const skinName = skin?.displayName || 'Unknown Skin';
+
+        const { videoUrl, imageUrl } = getSkinMedia(skin);
+
+        if (!firstSkinImage && imageUrl) {
+          firstSkinImage = imageUrl;
+        }
+
+        let mediaLine = '';
+        if (videoUrl) {
+          mediaLine = `\n📹 [Nonton Video Preview](${videoUrl})`;
+        } else if (imageUrl) {
+          mediaLine = `\n🖼️ [Lihat Gambar Skin](${imageUrl})`;
+        }
+
         embed.addFields({
           name: `Skin ${index + 1}: ${skinName}`,
-          value: `ID: \`${skinId}\`\nPrice: **${cost} VP**`,
+          value: `Price: **${cost} VP**${mediaLine}`,
           inline: false,
         });
       });
+
+      // Pass first skin image as thumbnail for main embed
+      if (firstSkinImage) {
+        embed.setThumbnail(firstSkinImage);
+      }
 
       await interaction.editReply({ embeds: [embed] });
 
