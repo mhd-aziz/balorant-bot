@@ -111,18 +111,19 @@ module.exports = {
       // 2. Fetch maps data untuk mapping
       const mapsData = await fetchMapsData();
 
-      // 3. Ambil match history dari valdocs endpoint
-      const historyUrl = `https://pd.${shard}.a.pvp.net/match-history/v1/history/${puuid}`;
-      const history = await pvpGet(historyUrl, access_token, entitlement_token);
+      // 3. Fetch match list
+      const matchHistoryUrl = `https://pd.${shard}.a.pvp.net/match-history/v1/history/${puuid}?startIndex=0&endIndex=5`;
+      const matchHistory = await pvpGet(matchHistoryUrl, access_token, entitlement_token);
+
+      if (!matchHistory || !matchHistory.History || matchHistory.History.length === 0) {
+        return interaction.editReply({
+          embeds: [dataNotFoundError('Riwayat Match', 'Belum ada riwayat match untuk akun ini. Mainkan beberapa match terlebih dahulu.')],
+        });
+      }
 
       if (!history || !history.History || history.History.length === 0) {
         return interaction.editReply({
-          embeds: [
-            errorEmbed(
-              'Tidak Ada Riwayat',
-              'Tidak ada riwayat match ditemukan untuk akun kamu.'
-            ),
-          ],
+          embeds: [dataNotFoundError('Riwayat Match', 'Belum ada riwayat match untuk akun ini. Mainkan beberapa match terlebih dahulu.')],
         });
       }
 
@@ -234,6 +235,8 @@ module.exports = {
       let errorEmbed;
       if (isAuthError(error)) {
         errorEmbed = tokenExpiredError();
+      } else if (error.message.includes('404') && error.message.includes('RESOURCE_NOT_FOUND')) {
+        errorEmbed = dataNotFoundError('Riwayat Match', 'Belum ada riwayat match untuk akun ini. Mainkan beberapa match terlebih dahulu.');
       } else if (isNetworkError(error)) {
         errorEmbed = networkError(error.message);
       } else {
