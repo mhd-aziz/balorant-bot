@@ -5,7 +5,6 @@
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
-const axios = require('axios');
 const Logger = require('../utils/logger');
 
 const VALORANT_RED = '#FF4655';
@@ -36,14 +35,18 @@ module.exports = {
 
     try {
       // Call Riot Auth Userinfo API
-      const response = await axios.get('https://auth.riotgames.com/userinfo', {
+      const response = await fetch('https://auth.riotgames.com/userinfo', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
-        timeout: 10000,
       });
 
-      const data = response.data;
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`HTTP ${response.status}: ${response.statusText} — ${text}`);
+      }
+
+      const data = await response.json();
 
       const gameName = data.acct?.game_name || session.game_name || 'Unknown';
       const tagLine = data.acct?.tag_line || session.tag_line || '';
@@ -89,7 +92,7 @@ module.exports = {
     } catch (error) {
       Logger.error(`Profile error for user ${discordId}: ${error.message}`);
       
-      const isAuthError = error.response?.status === 401 || error.response?.status === 403;
+      const isAuthError = error.message.includes('401') || error.message.includes('403');
 
       await interaction.editReply({
         embeds: [
