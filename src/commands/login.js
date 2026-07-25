@@ -37,7 +37,7 @@ module.exports = {
           { name: '⚡ Cepat', value: 'Hanya 1 klik setelah login Riot', inline: true },
           { name: '🔒 Aman', value: 'Password tidak lewat bot kita', inline: true }
         )
-        .setFooter({ text: 'Link ini khusus untuk kamu — jangan bagikan!' })
+        .setFooter({ text: 'Balorant Bot • by avv' })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });

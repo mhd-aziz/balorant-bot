@@ -87,7 +87,7 @@ module.exports = {
         .setColor(VALORANT_RED)
         .setTitle(`🎨 Skin: ${skin.displayName}`)
         .setDescription(`Ditemukan **${results.length} skin** cocok.`)
-        .setFooter({ text: 'Balorant Bot • valorant-api.com' })
+        .setFooter({ text: 'Balorant Bot • by avv' })
         .setTimestamp();
 
       if (imageUrl) {

@@ -85,7 +85,7 @@ module.exports = {
           { name: '🔐 Provider Login', value: `\`${providers}\``, inline: false },
           { name: '🆔 PUUID', value: `\`${puuid}\``, inline: false }
         )
-        .setFooter({ text: 'Balorant Bot • auth.riotgames.com/userinfo' })
+        .setFooter({ text: 'Balorant Bot • by avv' })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });

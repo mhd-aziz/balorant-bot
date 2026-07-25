@@ -112,7 +112,7 @@ module.exports = {
         .setColor(VALORANT_RED)
         .setTitle(`🛒 Daily Shop — ${session.game_name}#${session.tag_line}`)
         .setDescription(`**${offers.length} skin offers hari ini** • Reset dalam **${hours}h ${minutes}m**`)
-        .setFooter({ text: 'Balorant Bot • valdocs.prometheuz.me' })
+        .setFooter({ text: 'Balorant Bot • by avv' })
         .setTimestamp();
 
       let firstSkinImage = null;

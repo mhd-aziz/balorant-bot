@@ -145,7 +145,7 @@ module.exports = {
         .setColor(VALORANT_RED)
         .setTitle('📊 Riwayat Match Terakhir')
         .setDescription(`Menampilkan 5 match terakhir untuk **${game_name}#${tag_line}**`)
-        .setFooter({ text: 'Balorant Bot • valdocs.prometheuz.me' })
+        .setFooter({ text: 'Balorant Bot • by avv' })
         .setTimestamp();
 
       // 7. Set thumbnail dari map pertama yang valid

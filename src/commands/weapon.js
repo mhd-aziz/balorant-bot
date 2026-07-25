@@ -73,7 +73,7 @@ module.exports = {
             ? `Ditemukan **${results.length} senjata**, menampilkan **${maxDisplay} pertama**.\nGunakan keyword lebih spesifik untuk mempersempit hasil.`
             : `Ditemukan **${results.length} senjata**`
         )
-        .setFooter({ text: 'Balorant Bot • valorant-api.com' })
+        .setFooter({ text: 'Balorant Bot • by avv' })
         .setTimestamp();
 
       toDisplay.forEach((weapon, index) => {

@@ -66,7 +66,7 @@ module.exports = {
           inline: false,
         }
       )
-      .setFooter({ text: 'Balorant Bot • Powered by valdocs.prometheuz.me API' })
+      .setFooter({ text: 'Balorant Bot • by avv' })
       .setTimestamp();
 
     await interaction.reply({ embeds: [guideEmbed], flags: 64 });
