@@ -9,6 +9,15 @@ const { pvpGet } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
 const { VALORANT_RED } = require('../constants/colors');
 const { TIER_NAMES } = require('../constants/tiers');
+const {
+  authRequiredError,
+  tokenExpiredError,
+  networkError,
+  dataNotFoundError,
+  apiError,
+  isAuthError,
+  isNetworkError,
+} = require('../utils/error-handler');
 
 // Cache untuk seasons data dari valorant-api.com
 let _seasonsCache = null;
@@ -65,12 +74,7 @@ module.exports = {
 
     if (!session) {
       return interaction.editReply({
-        embeds: [
-          errorEmbed(
-            'Belum Login',
-            'Kamu harus login terlebih dahulu menggunakan `/login` untuk melihat statistik competitive.'
-          ),
-        ],
+        embeds: [authRequiredError('/stats')],
       });
     }
 
@@ -83,12 +87,7 @@ module.exports = {
 
       if (!mmrData || !mmrData.QueueSkills || !mmrData.QueueSkills.competitive) {
         return interaction.editReply({
-          embeds: [
-            errorEmbed(
-              'Data Tidak Ditemukan',
-              'Tidak ada data competitive untuk akun ini.'
-            ),
-          ],
+          embeds: [dataNotFoundError('Data Competitive', 'Akun ini belum memiliki data competitive. Mainkan placement matches terlebih dahulu.')],
         });
       }
 
@@ -119,12 +118,7 @@ module.exports = {
 
       if (!currentSeasonStats) {
         return interaction.editReply({
-          embeds: [
-            errorEmbed(
-              'Belum Ada Data Season',
-              'Belum ada data competitive untuk season ini. Mainkan placement matches terlebih dahulu.'
-            ),
-          ],
+          embeds: [dataNotFoundError('Data Season', 'Belum ada data competitive untuk season ini. Mainkan placement matches terlebih dahulu.')],
         });
       }
 
@@ -185,28 +179,19 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      Logger.error(`Stats command error for user ${discordId}: ${error.message}`);
+      Logger.error(`Stats error for user ${discordId}: ${error.message}`);
 
-      const isAuthError = error.message.includes('401') || error.message.includes('403');
+      let errorEmbed;
+      if (isAuthError(error)) {
+        errorEmbed = tokenExpiredError();
+      } else if (isNetworkError(error)) {
+        errorEmbed = networkError(error.message);
+      } else {
+        errorEmbed = apiError(`Gagal mengambil data stats: ${error.message}`);
+      }
 
-      await interaction.editReply({
-        embeds: [
-          errorEmbed(
-            isAuthError ? 'Sesi Login Kadaluarsa' : 'Gagal Mengambil Data Stats',
-            isAuthError
-              ? 'Sesi login kamu telah habis. Silakan `/login` kembali untuk memperbarui token.'
-              : `Terjadi kesalahan saat mengambil data stats.\nError: ${error.message}`
-          ),
-        ],
-      });
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   },
 };
 
-function errorEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor('#FF0000')
-    .setTitle(`❌ ${title}`)
-    .setDescription(description)
-    .setTimestamp();
-}

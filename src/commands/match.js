@@ -8,6 +8,15 @@ const { AuthService } = require('../services/auth-service');
 const { pvpGet } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
 const { VALORANT_RED } = require('../constants/colors');
+const {
+  authRequiredError,
+  tokenExpiredError,
+  networkError,
+  dataNotFoundError,
+  apiError,
+  isAuthError,
+  isNetworkError,
+} = require('../utils/error-handler');
 
 // Cache maps data (fetch sekali per session)
 let mapsCache = null;
@@ -93,12 +102,7 @@ module.exports = {
       const session = await AuthService.getSession(interaction.user.id);
       if (!session) {
         return interaction.editReply({
-          embeds: [
-            errorEmbed(
-              'Belum Login',
-              'Kamu harus login terlebih dahulu menggunakan `/login` untuk melihat riwayat match.'
-            ),
-          ],
+          embeds: [authRequiredError('/match')],
         });
       }
 
@@ -225,23 +229,19 @@ module.exports = {
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
-      Logger.error(`Error /match for user ${interaction.user.id}: ${error.message}`);
-      await interaction.editReply({
-        embeds: [
-          errorEmbed(
-            'Gagal Mengambil Data Match',
-            `Terjadi kesalahan saat mengambil data match.\nError: ${error.message}`
-          ),
-        ],
-      });
+      Logger.error(`Match error for user ${interaction.user.id}: ${error.message}`);
+
+      let errorEmbed;
+      if (isAuthError(error)) {
+        errorEmbed = tokenExpiredError();
+      } else if (isNetworkError(error)) {
+        errorEmbed = networkError(error.message);
+      } else {
+        errorEmbed = apiError(`Gagal mengambil data match: ${error.message}`);
+      }
+
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   },
 };
 
-function errorEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor('#FF0000')
-    .setTitle(`❌ ${title}`)
-    .setDescription(description)
-    .setTimestamp();
-}

@@ -7,6 +7,15 @@ const { AuthService } = require('../services/auth-service');
 const { pvpPost } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
 const { VALORANT_RED } = require('../constants/colors');
+const {
+  authRequiredError,
+  tokenExpiredError,
+  networkError,
+  dataNotFoundError,
+  apiError,
+  isAuthError,
+  isNetworkError,
+} = require('../utils/error-handler');
 
 // Cache untuk skin data dari valorant-api.com
 let _skinCache = null;
@@ -69,12 +78,7 @@ module.exports = {
 
     if (!session) {
       return interaction.editReply({
-        embeds: [
-          errorEmbed(
-            'Belum Login',
-            'Kamu harus login terlebih dahulu menggunakan `/login` untuk melihat daily shop.'
-          ),
-        ],
+        embeds: [authRequiredError('/shop')],
       });
     }
 
@@ -151,28 +155,18 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      Logger.error(`Shop command error for user ${discordId}: ${error.message}`);
-      
-      const isAuthError = error.message.includes('401') || error.message.includes('403');
-      
-      await interaction.editReply({
-        embeds: [
-          errorEmbed(
-            isAuthError ? 'Sesi Login Kadaluarsa' : 'Gagal Mengambil Data Shop',
-            isAuthError
-              ? 'Sesi login kamu telah habis. Silakan `/login` kembali untuk memperbarui token.'
-              : `Terjadi kesalahan saat mengambil data shop.\nError: ${error.message}`
-          ),
-        ],
-      });
+      Logger.error(`Shop error for user ${discordId}: ${error.message}`);
+
+      let errorEmbed;
+      if (isAuthError(error)) {
+        errorEmbed = tokenExpiredError();
+      } else if (isNetworkError(error)) {
+        errorEmbed = networkError(error.message);
+      } else {
+        errorEmbed = apiError(`Gagal mengambil data shop: ${error.message}`);
+      }
+
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   },
 };
-
-function errorEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor('#FF0000')
-    .setTitle(`❌ ${title}`)
-    .setDescription(description)
-    .setTimestamp();
-}

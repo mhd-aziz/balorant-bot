@@ -7,6 +7,14 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
 const Logger = require('../utils/logger');
 const { VALORANT_RED } = require('../constants/colors');
+const {
+  authRequiredError,
+  tokenExpiredError,
+  networkError,
+  apiError,
+  isAuthError,
+  isNetworkError,
+} = require('../utils/error-handler');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,21 +26,16 @@ module.exports = {
 
     const discordId = interaction.user.id;
 
-    // Cek session user
-    const session = await AuthService.getSession(discordId).catch(() => null);
-
-    if (!session) {
-      return interaction.editReply({
-        embeds: [
-          errorEmbed(
-            'Belum Login',
-            'Kamu harus login terlebih dahulu menggunakan `/login` untuk melihat informasi profil akun Riot kamu.'
-          ),
-        ],
-      });
-    }
-
     try {
+      // Cek session user
+      const session = await AuthService.getSession(discordId).catch(() => null);
+
+      if (!session) {
+        return interaction.editReply({
+          embeds: [authRequiredError('/profile')],
+        });
+      }
+
       // Call Riot Auth Userinfo API
       const response = await fetch('https://auth.riotgames.com/userinfo', {
         headers: {
@@ -88,29 +91,20 @@ module.exports = {
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });
+
     } catch (error) {
       Logger.error(`Profile error for user ${discordId}: ${error.message}`);
-      
-      const isAuthError = error.message.includes('401') || error.message.includes('403');
 
-      await interaction.editReply({
-        embeds: [
-          errorEmbed(
-            isAuthError ? 'Sesi Login Kadaluarsa' : 'Gagal Mengambil Data Profil',
-            isAuthError
-              ? 'Sesi login kamu telah habis. Silakan `/login` kembali untuk memperbarui token.'
-              : `Error: ${error.message}`
-          ),
-        ],
-      });
+      let errorEmbed;
+      if (isAuthError(error)) {
+        errorEmbed = tokenExpiredError();
+      } else if (isNetworkError(error)) {
+        errorEmbed = networkError(error.message);
+      } else {
+        errorEmbed = apiError(`Gagal mengambil data profil: ${error.message}`);
+      }
+
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   },
 };
-
-function errorEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor('#FF0000')
-    .setTitle(`❌ ${title}`)
-    .setDescription(description)
-    .setTimestamp();
-}
