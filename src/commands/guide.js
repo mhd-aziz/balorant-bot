@@ -9,7 +9,7 @@ module.exports = {
     const guideEmbed = new EmbedBuilder()
       .setColor('#FF4655')
       .setTitle('📖 Panduan Balorant Bot')
-      .setDescription('Bot Discord untuk cek shop, profil, dan match history Valorant kamu!')
+      .setDescription('Bot Discord untuk cek shop, profil, match history, stats, dan weapon info Valorant kamu!')
       .addFields(
         {
           name: '🔐 Cara Login',
@@ -23,11 +23,19 @@ module.exports = {
           inline: false,
         },
         {
-          name: '🛍️ Command Utama',
+          name: '🎮 Command Utama (Perlu Login)',
           value:
-            '`/shop` — Cek daily shop Valorant (skin harian)\n' +
-            '`/profile` — Info rank & statistik akun\n' +
-            '`/match` — Riwayat 5 match terakhir kamu',
+            '`/shop` — Daily shop Valorant (4 skin offers hari ini dengan video/gambar preview)\n' +
+            '`/profile` — Info akun Riot lengkap (country, verifikasi email, tanggal dibuat)\n' +
+            '`/match` — Riwayat 5 match terakhir dengan KDA, map, score, dan result\n' +
+            '`/stats` — Statistik competitive rank, RR, win/loss, win rate, dan last match RR change',
+          inline: false,
+        },
+        {
+          name: '🔫 Command Weapon & Skin (Tanpa Login)',
+          value:
+            '`/weapon <nama>` — Cari info senjata Valorant (stats, damage, fire rate, harga)\n' +
+            '`/weaponskin <nama>` — Cari skin senjata dengan gambar dan video preview',
           inline: false,
         },
         {
@@ -39,6 +47,16 @@ module.exports = {
           inline: false,
         },
         {
+          name: '✨ Fitur Unggulan',
+          value:
+            '• **Shop dengan Media** — Prioritas video preview > gambar > kosong\n' +
+            '• **Match History** — Nama map sinkron dengan API resmi Valorant\n' +
+            '• **Stats Lengkap** — Current rank, RR, win rate, last match RR change\n' +
+            '• **Weapon Skin Search** — Dropdown interaktif untuk navigasi skin alternatif\n' +
+            '• **Profile Detail** — Country, locale, verifikasi email/phone, tanggal akun dibuat',
+          inline: false,
+        },
+        {
           name: '❓ FAQ',
           value:
             '**Q: Token expired / error 401?**\n' +
@@ -46,23 +64,26 @@ module.exports = {
             '**Q: Shop tidak muncul?**\n' +
             'A: Pastikan sudah login dengan `/login` dan akun Riot kamu aktif.\n\n' +
             '**Q: Apakah aman?**\n' +
-            'A: Ya! Login dilakukan langsung di situs resmi Riot. Bot tidak pernah melihat password kamu.',
+            'A: Ya! Login dilakukan langsung di situs resmi Riot. Bot tidak pernah melihat password kamu.\n\n' +
+            '**Q: Command weapon/weaponskin perlu login?**\n' +
+            'A: Tidak! Command ini menggunakan API publik Valorant, bisa dipakai tanpa login.',
           inline: false,
         },
         {
           name: '🔒 Keamanan & Privasi',
           value:
-            '• Bot hanya menyimpan token Riot (berlaku 1 jam)\n' +
+            '• Bot hanya menyimpan token Riot (berlaku ~1 jam)\n' +
             '• Password **TIDAK** pernah disimpan atau dilihat bot\n' +
             '• Login langsung di situs resmi Riot Games\n' +
-            '• Token disimpan aman di database terenkripsi',
+            '• Token disimpan aman di database terenkripsi (Supabase)\n' +
+            '• Semua API request menggunakan HTTPS',
           inline: false,
         },
         {
           name: '🌐 Multi-Server',
           value:
             'Bot ini menggunakan **Global Commands** — bisa dipakai di semua server Discord!\n' +
-            'Undang bot ke server lain dengan link OAuth2 dari Discord Developer Portal.',
+            'Total **10 commands** tersedia: `/login`, `/logout`, `/profile`, `/shop`, `/match`, `/stats`, `/weapon`, `/weaponskin`, `/help`, `/guide`',
           inline: false,
         }
       )
