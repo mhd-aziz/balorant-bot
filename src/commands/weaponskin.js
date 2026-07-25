@@ -33,11 +33,9 @@ function searchSkin(skins, query) {
 
 // Buat select menu items dari skin list (max 25, Discord limit)
 function createSelectMenuItems(skins) {
-  return skins.slice(0, 25).map((skin, index) => ({
-    label: skin.displayName,
+  return skins.slice(0, 25).map((skin) => ({
+    label: skin.displayName.length > 100 ? skin.displayName.substring(0, 97) + '...' : skin.displayName,
     value: skin.uuid,
-    description: skin.weapon?.displayName ? `Weapon: ${skin.weapon.displayName}` : undefined,
-    emoji: index < 9 ? { name: (index + 1).toString() } : undefined,
   }));
 }
 
