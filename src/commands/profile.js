@@ -75,13 +75,13 @@ module.exports = {
         .setColor(VALORANT_RED)
         .setTitle(`👤 Profil Akun Riot: ${gameName}#${tagLine}`)
         .addFields(
-          { name: '🎮 Riot ID', value: `\`${gameName}#${tagLine}\``, inline: true },
-          { name: '🌍 Negara (Country)', value: `\`${data.country || 'N/A'}\``, inline: true },
-          { name: '🌐 Locale', value: `\`${data.player_locale || 'N/A'}\``, inline: true },
+          { name: '🎮 Riot ID', value: `\`${gameName}#${tagLine}\``, inline: false },
+          { name: '🌍 Negara (Country)', value: `\`${data.country || 'N/A'}\``, inline: false },
+          { name: '🌐 Locale', value: `\`${data.player_locale || 'N/A'}\``, inline: false },
           { name: '📅 Tanggal Pembuatan', value: createdAtStr, inline: false },
-          { name: '📧 Verifikasi Email', value: emailStatus, inline: true },
-          { name: '📱 Verifikasi No. HP', value: phoneStatus, inline: true },
-          { name: '🛡️ Status Akun', value: acctStatus, inline: true },
+          { name: '📧 Verifikasi Email', value: emailStatus, inline: false },
+          { name: '📱 Verifikasi No. HP', value: phoneStatus, inline: false },
+          { name: '🛡️ Status Akun', value: acctStatus, inline: false },
           { name: '🔐 Provider Login', value: `\`${providers}\``, inline: false },
           { name: '🆔 PUUID', value: `\`${puuid}\``, inline: false }
         )
