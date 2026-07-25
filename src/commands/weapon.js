@@ -4,8 +4,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Logger = require('../utils/logger');
-
-const VALORANT_RED = '#FF4655';
+const { VALORANT_RED } = require('../constants/colors');
 
 // Cache untuk weapon data dari valorant-api.com
 let _weaponCache = null;

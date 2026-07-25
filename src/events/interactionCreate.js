@@ -7,8 +7,7 @@ const { Events, EmbedBuilder } = require('discord.js');
 const Logger = require('../utils/logger');
 const fs = require('fs');
 const path = require('path');
-
-const VALORANT_RED = '#FF4655';
+const { VALORANT_RED } = require('../constants/colors');
 
 // Cache untuk weaponskin di handleSelectMenu
 let _skinCache = null;

@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { VALORANT_RED } = require('../constants/colors');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,7 +8,7 @@ module.exports = {
 
   async execute(interaction) {
     const guideEmbed = new EmbedBuilder()
-      .setColor('#FF4655')
+      .setColor(VALORANT_RED)
       .setTitle('📖 Panduan Balorant Bot')
       .setDescription('Bot Discord untuk cek shop, profil, match history, stats, dan weapon info Valorant kamu!')
       .addFields(

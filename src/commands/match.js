@@ -7,8 +7,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
 const { pvpGet } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
-
-const VALORANT_RED = '#FF4655';
+const { VALORANT_RED } = require('../constants/colors');
 
 // Cache maps data (fetch sekali per session)
 let mapsCache = null;

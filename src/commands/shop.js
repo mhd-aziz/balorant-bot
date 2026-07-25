@@ -6,8 +6,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
 const { pvpPost } = require('../services/pvp-client');
 const Logger = require('../utils/logger');
-
-const VALORANT_RED = '#FF4655';
+const { VALORANT_RED } = require('../constants/colors');
 
 // Cache untuk skin data dari valorant-api.com
 let _skinCache = null;

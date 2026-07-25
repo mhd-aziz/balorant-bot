@@ -6,8 +6,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { AuthService } = require('../services/auth-service');
 const Logger = require('../utils/logger');
-
-const VALORANT_RED = '#FF4655';
+const { VALORANT_RED } = require('../constants/colors');
 
 module.exports = {
   data: new SlashCommandBuilder()
