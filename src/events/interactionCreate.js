@@ -106,7 +106,7 @@ async function handleSelectMenu(interaction) {
         const embed = new EmbedBuilder()
             .setColor(VALORANT_RED)
             .setTitle(`🎨 Skin: ${skin.displayName}`)
-            .setFooter({ text: 'Valorant API • valorant-api.com' })
+            .setFooter({ text: 'Balorant Bot • by avv' })
             .setTimestamp();
 
         if (imageUrl) {
