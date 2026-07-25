@@ -18,6 +18,7 @@ async function getSkinData() {
     const json = await res.json();
     if (json.status === 200 && json.data) {
       _skinCache = json.data;
+      Logger.info(`Skin cache loaded: ${json.data.length} skins`);
       return _skinCache;
     }
   } catch (err) {
@@ -62,17 +63,19 @@ module.exports = {
     .setDescription('Lihat daily shop kamu (4 skin offers hari ini dengan preview)'),
 
   async execute(interaction) {
-    await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
+    await interaction.deferReply({ flags: 0 });
 
     const discordId = interaction.user.id;
     const session = await AuthService.getSession(discordId).catch(() => null);
 
     if (!session) {
       return interaction.editReply({
-        embeds: [errorEmbed(
-          'Belum Login',
-          'Gunakan `/login` untuk link akun Riot kamu dulu.'
-        )],
+        embeds: [
+          errorEmbed(
+            'Belum Login',
+            'Kamu harus login terlebih dahulu menggunakan `/login` untuk melihat daily shop.'
+          ),
+        ],
       });
     }
 
@@ -91,10 +94,12 @@ module.exports = {
       const skinPanel = shopData?.SkinsPanelLayout;
       if (!skinPanel || !skinPanel.SingleItemStoreOffers || skinPanel.SingleItemStoreOffers.length === 0) {
         return interaction.editReply({
-          embeds: [errorEmbed(
-            'Shop Kosong',
-            'Tidak ada skin offers hari ini.'
-          )],
+          embeds: [
+            errorEmbed(
+              'Shop Kosong',
+              'Tidak ada skin offers hari ini.'
+            ),
+          ],
         });
       }
 
@@ -107,7 +112,7 @@ module.exports = {
         .setColor(VALORANT_RED)
         .setTitle(`🛒 Daily Shop — ${session.game_name}#${session.tag_line}`)
         .setDescription(`**${offers.length} skin offers hari ini** • Reset dalam **${hours}h ${minutes}m**`)
-        .setFooter({ text: 'Valorant Storefront API' })
+        .setFooter({ text: 'Balorant Bot • valdocs.prometheuz.me' })
         .setTimestamp();
 
       let firstSkinImage = null;
@@ -139,7 +144,7 @@ module.exports = {
         });
       });
 
-      // Pass first skin image as thumbnail for main embed
+      // Set thumbnail dari skin pertama
       if (firstSkinImage) {
         embed.setThumbnail(firstSkinImage);
       }
@@ -147,12 +152,19 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      Logger.error(`Shop command error: ${error.message}`);
+      Logger.error(`Shop command error for user ${discordId}: ${error.message}`);
+      
+      const isAuthError = error.message.includes('401') || error.message.includes('403');
+      
       await interaction.editReply({
-        embeds: [errorEmbed(
-          'Gagal mengambil shop',
-          `Error: ${error.message}\n\nPastikan kamu sudah login dengan akun yang valid.`
-        )],
+        embeds: [
+          errorEmbed(
+            isAuthError ? 'Sesi Login Kadaluarsa' : 'Gagal Mengambil Data Shop',
+            isAuthError
+              ? 'Sesi login kamu telah habis. Silakan `/login` kembali untuk memperbarui token.'
+              : `Terjadi kesalahan saat mengambil data shop.\nError: ${error.message}`
+          ),
+        ],
       });
     }
   },
