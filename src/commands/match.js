@@ -112,7 +112,7 @@ module.exports = {
       const mapsData = await fetchMapsData();
 
       // 3. Fetch match list
-      const matchHistoryUrl = `https://pd.${shard}.a.pvp.net/match-history/v1/history/${puuid}?startIndex=0&endIndex=5`;
+      const matchHistoryUrl = `https://pd.${shard}.a.pvp.net/match-history/v1/history/${puuid}`;
       const matchHistory = await pvpGet(matchHistoryUrl, access_token, entitlement_token);
 
       if (!matchHistory || !matchHistory.History || matchHistory.History.length === 0) {
@@ -121,14 +121,8 @@ module.exports = {
         });
       }
 
-      if (!history || !history.History || history.History.length === 0) {
-        return interaction.editReply({
-          embeds: [dataNotFoundError('Riwayat Match', 'Belum ada riwayat match untuk akun ini. Mainkan beberapa match terlebih dahulu.')],
-        });
-      }
-
       // 4. Ambil 5 match terakhir
-      const recentMatches = history.History.slice(0, 5);
+      const recentMatches = matchHistory.History.slice(0, 5);
 
       // 5. Fetch detail setiap match
       const matchDetails = await Promise.all(
